@@ -11,7 +11,7 @@ namespace Modulo9
         static void Main(string[] args)
         {
             ADOVersionM9.Run();
-            EFVersionM9.Run();
+            //EFVersionM9.Run();
         }
 
     }

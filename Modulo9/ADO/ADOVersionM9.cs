@@ -3,18 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Modulo9.ADO;
+using Modulo9.ADO.ADOM9DatasetTableAdapters;
 
 namespace Modulo9
 {
     public static class ADOVersionM9
     {
-        public static string conn_str { get; set; }
-        
         public static void Run()
         {
             bool next_opt = true;
             Console.WriteLine("----- Ejecución de versión ADO del programa -----\n");
-            
+
             do
             {
                 switch (Menu())
@@ -32,7 +32,7 @@ namespace Modulo9
                         ADOSGetAndManageQuote();
                         break;
                     default:
-                        Console.WriteLine("Opción incorrecta. Reintentelo");
+                        Console.WriteLine("\n--- ERROR: Opción incorrecta. Reintentelo --\n");
                         break;
                 }
             }
@@ -42,9 +42,11 @@ namespace Modulo9
         public static int Menu()
         {
             int menu_opt = -1;
-            Console.WriteLine("1) Mostrar productos\n" +
+            Console.WriteLine("\n" +
+                              "1) Mostrar productos\n" +
                               "2) Mostrar pedidos\n" +
-                              "3) Seleccionar pedido\n");
+                              "3) Seleccionar pedido\n" +
+                              "0) Salir\n");
             do
             {
                 Console.Write("Opción: ");
@@ -57,7 +59,38 @@ namespace Modulo9
         #region Product Methods
         public static void ADOShowProducts()
         {
+            int counter = 0;
+            string prompt_input = "";
 
+            //Base de datos que contiene estructura de tablas
+            ADOM9Dataset DataADO = new ADOM9Dataset();
+
+            //Adaptador para descargar datos sobre tabla de dataset
+            ProductTableAdapter ProdTabAdpt = new ProductTableAdapter();
+
+            //Rellenar con todo
+            ProdTabAdpt.Fill(DataADO.Product);
+
+            foreach (ADOM9Dataset.ProductRow Producto in DataADO.Product.Rows)
+            {
+                Console.WriteLine($"ID: {Producto.ProductID} - Nombre producto {Producto.Name}");
+                counter++;
+
+                if(counter % 10 == 0)
+                {
+                    Console.Write("Introduzca X para salir. Si quiere 10 elementos siguientes, pulse una tecla: ");
+                    prompt_input = Console.ReadLine();
+
+                    if(prompt_input.ToLower() == "x")
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+            }
         }
         #endregion
 

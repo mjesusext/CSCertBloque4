@@ -43,10 +43,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ADO\ADOM9DataSet.Designer.cs">
+    <Compile Include="ADO\ADOM9Dataset.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
-      <DependentUpon>ADOM9DataSet.xsd</DependentUpon>
+      <DependentUpon>ADOM9Dataset.xsd</DependentUpon>
     </Compile>
     <Compile Include="ADO\ADOVersionM9.cs" />
     <Compile Include="EF\EFVersionM9.cs" />
@@ -59,16 +59,16 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="ADO\ADOM9DataSet.xsc">
-      <DependentUpon>ADOM9DataSet.xsd</DependentUpon>
+    <None Include="ADO\ADOM9Dataset.xsc">
+      <DependentUpon>ADOM9Dataset.xsd</DependentUpon>
     </None>
-    <None Include="ADO\ADOM9DataSet.xsd">
+    <None Include="ADO\ADOM9Dataset.xsd">
       <SubType>Designer</SubType>
       <Generator>MSDataSetGenerator</Generator>
-      <LastGenOutput>ADOM9DataSet.Designer.cs</LastGenOutput>
+      <LastGenOutput>ADOM9Dataset.Designer.cs</LastGenOutput>
     </None>
-    <None Include="ADO\ADOM9DataSet.xss">
-      <DependentUpon>ADOM9DataSet.xsd</DependentUpon>
+    <None Include="ADO\ADOM9Dataset.xss">
+      <DependentUpon>ADOM9Dataset.xsd</DependentUpon>
     </None>
     <None Include="App.config" />
     <None Include="Properties\Settings.settings">

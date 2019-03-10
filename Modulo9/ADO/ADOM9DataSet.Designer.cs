@@ -20,9 +20,9 @@ namespace Modulo9.ADO {
     [global::System.ComponentModel.DesignerCategoryAttribute("code")]
     [global::System.ComponentModel.ToolboxItem(true)]
     [global::System.Xml.Serialization.XmlSchemaProviderAttribute("GetTypedDataSetSchema")]
-    [global::System.Xml.Serialization.XmlRootAttribute("ADOM9DataSet")]
+    [global::System.Xml.Serialization.XmlRootAttribute("ADOM9Dataset")]
     [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.DataSet")]
-    public partial class ADOM9DataSet : global::System.Data.DataSet {
+    public partial class ADOM9Dataset : global::System.Data.DataSet {
         
         private ProductDataTable tableProduct;
         
@@ -36,7 +36,7 @@ namespace Modulo9.ADO {
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "15.0.0.0")]
-        public ADOM9DataSet() {
+        public ADOM9Dataset() {
             this.BeginInit();
             this.InitClass();
             global::System.ComponentModel.CollectionChangeEventHandler schemaChangedHandler = new global::System.ComponentModel.CollectionChangeEventHandler(this.SchemaChanged);
@@ -47,7 +47,7 @@ namespace Modulo9.ADO {
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "15.0.0.0")]
-        protected ADOM9DataSet(global::System.Runtime.Serialization.SerializationInfo info, global::System.Runtime.Serialization.StreamingContext context) : 
+        protected ADOM9Dataset(global::System.Runtime.Serialization.SerializationInfo info, global::System.Runtime.Serialization.StreamingContext context) : 
                 base(info, context, false) {
             if ((this.IsBinarySerialized(info, context) == true)) {
                 this.InitVars(false);
@@ -159,7 +159,7 @@ namespace Modulo9.ADO {
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "15.0.0.0")]
         public override global::System.Data.DataSet Clone() {
-            ADOM9DataSet cln = ((ADOM9DataSet)(base.Clone()));
+            ADOM9Dataset cln = ((ADOM9Dataset)(base.Clone()));
             cln.InitVars();
             cln.SchemaSerializationMode = this.SchemaSerializationMode;
             return cln;
@@ -250,9 +250,9 @@ namespace Modulo9.ADO {
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "15.0.0.0")]
         private void InitClass() {
-            this.DataSetName = "ADOM9DataSet";
+            this.DataSetName = "ADOM9Dataset";
             this.Prefix = "";
-            this.Namespace = "http://tempuri.org/ADOM9DataSet.xsd";
+            this.Namespace = "http://tempuri.org/ADOM9Dataset.xsd";
             this.EnforceConstraints = true;
             this.SchemaSerializationMode = global::System.Data.SchemaSerializationMode.IncludeSchema;
             this.tableProduct = new ProductDataTable();
@@ -296,7 +296,7 @@ namespace Modulo9.ADO {
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "15.0.0.0")]
         public static global::System.Xml.Schema.XmlSchemaComplexType GetTypedDataSetSchema(global::System.Xml.Schema.XmlSchemaSet xs) {
-            ADOM9DataSet ds = new ADOM9DataSet();
+            ADOM9Dataset ds = new ADOM9Dataset();
             global::System.Xml.Schema.XmlSchemaComplexType type = new global::System.Xml.Schema.XmlSchemaComplexType();
             global::System.Xml.Schema.XmlSchemaSequence sequence = new global::System.Xml.Schema.XmlSchemaSequence();
             global::System.Xml.Schema.XmlSchemaAny any = new global::System.Xml.Schema.XmlSchemaAny();
@@ -933,7 +933,7 @@ namespace Modulo9.ADO {
             public static global::System.Xml.Schema.XmlSchemaComplexType GetTypedTableSchema(global::System.Xml.Schema.XmlSchemaSet xs) {
                 global::System.Xml.Schema.XmlSchemaComplexType type = new global::System.Xml.Schema.XmlSchemaComplexType();
                 global::System.Xml.Schema.XmlSchemaSequence sequence = new global::System.Xml.Schema.XmlSchemaSequence();
-                ADOM9DataSet ds = new ADOM9DataSet();
+                ADOM9Dataset ds = new ADOM9Dataset();
                 global::System.Xml.Schema.XmlSchemaAny any1 = new global::System.Xml.Schema.XmlSchemaAny();
                 any1.Namespace = "http://www.w3.org/2001/XMLSchema";
                 any1.MinOccurs = new decimal(0);
@@ -1591,7 +1591,7 @@ namespace Modulo9.ADO {
             public static global::System.Xml.Schema.XmlSchemaComplexType GetTypedTableSchema(global::System.Xml.Schema.XmlSchemaSet xs) {
                 global::System.Xml.Schema.XmlSchemaComplexType type = new global::System.Xml.Schema.XmlSchemaComplexType();
                 global::System.Xml.Schema.XmlSchemaSequence sequence = new global::System.Xml.Schema.XmlSchemaSequence();
-                ADOM9DataSet ds = new ADOM9DataSet();
+                ADOM9Dataset ds = new ADOM9Dataset();
                 global::System.Xml.Schema.XmlSchemaAny any1 = new global::System.Xml.Schema.XmlSchemaAny();
                 any1.Namespace = "http://www.w3.org/2001/XMLSchema";
                 any1.MinOccurs = new decimal(0);
@@ -2007,7 +2007,7 @@ namespace Modulo9.ADO {
             public static global::System.Xml.Schema.XmlSchemaComplexType GetTypedTableSchema(global::System.Xml.Schema.XmlSchemaSet xs) {
                 global::System.Xml.Schema.XmlSchemaComplexType type = new global::System.Xml.Schema.XmlSchemaComplexType();
                 global::System.Xml.Schema.XmlSchemaSequence sequence = new global::System.Xml.Schema.XmlSchemaSequence();
-                ADOM9DataSet ds = new ADOM9DataSet();
+                ADOM9Dataset ds = new ADOM9Dataset();
                 global::System.Xml.Schema.XmlSchemaAny any1 = new global::System.Xml.Schema.XmlSchemaAny();
                 any1.Namespace = "http://www.w3.org/2001/XMLSchema";
                 any1.MinOccurs = new decimal(0);
@@ -3348,7 +3348,7 @@ namespace Modulo9.ADO {
         }
     }
 }
-namespace Modulo9.ADO.ADOM9DataSetTableAdapters {
+namespace Modulo9.ADO.ADOM9DatasetTableAdapters {
     
     
     /// <summary>
@@ -3717,7 +3717,7 @@ SELECT ProductID, Name, ProductNumber, MakeFlag, FinishedGoodsFlag, Color, Safet
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "15.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Fill, true)]
-        public virtual int Fill(ADOM9DataSet.ProductDataTable dataTable) {
+        public virtual int Fill(ADOM9Dataset.ProductDataTable dataTable) {
             this.Adapter.SelectCommand = this.CommandCollection[0];
             if ((this.ClearBeforeFill == true)) {
                 dataTable.Clear();
@@ -3730,9 +3730,9 @@ SELECT ProductID, Name, ProductNumber, MakeFlag, FinishedGoodsFlag, Color, Safet
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "15.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Select, true)]
-        public virtual ADOM9DataSet.ProductDataTable GetData() {
+        public virtual ADOM9Dataset.ProductDataTable GetData() {
             this.Adapter.SelectCommand = this.CommandCollection[0];
-            ADOM9DataSet.ProductDataTable dataTable = new ADOM9DataSet.ProductDataTable();
+            ADOM9Dataset.ProductDataTable dataTable = new ADOM9Dataset.ProductDataTable();
             this.Adapter.Fill(dataTable);
             return dataTable;
         }
@@ -3740,14 +3740,14 @@ SELECT ProductID, Name, ProductNumber, MakeFlag, FinishedGoodsFlag, Color, Safet
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "15.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-        public virtual int Update(ADOM9DataSet.ProductDataTable dataTable) {
+        public virtual int Update(ADOM9Dataset.ProductDataTable dataTable) {
             return this.Adapter.Update(dataTable);
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "15.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-        public virtual int Update(ADOM9DataSet dataSet) {
+        public virtual int Update(ADOM9Dataset dataSet) {
             return this.Adapter.Update(dataSet, "Product");
         }
         
@@ -4772,7 +4772,7 @@ SELECT SalesOrderID, RevisionNumber, OrderDate, DueDate, ShipDate, Status, Onlin
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "15.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Fill, true)]
-        public virtual int Fill(ADOM9DataSet.SalesOrderHeaderDataTable dataTable) {
+        public virtual int Fill(ADOM9Dataset.SalesOrderHeaderDataTable dataTable) {
             this.Adapter.SelectCommand = this.CommandCollection[0];
             if ((this.ClearBeforeFill == true)) {
                 dataTable.Clear();
@@ -4785,9 +4785,9 @@ SELECT SalesOrderID, RevisionNumber, OrderDate, DueDate, ShipDate, Status, Onlin
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "15.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Select, true)]
-        public virtual ADOM9DataSet.SalesOrderHeaderDataTable GetData() {
+        public virtual ADOM9Dataset.SalesOrderHeaderDataTable GetData() {
             this.Adapter.SelectCommand = this.CommandCollection[0];
-            ADOM9DataSet.SalesOrderHeaderDataTable dataTable = new ADOM9DataSet.SalesOrderHeaderDataTable();
+            ADOM9Dataset.SalesOrderHeaderDataTable dataTable = new ADOM9Dataset.SalesOrderHeaderDataTable();
             this.Adapter.Fill(dataTable);
             return dataTable;
         }
@@ -4795,14 +4795,14 @@ SELECT SalesOrderID, RevisionNumber, OrderDate, DueDate, ShipDate, Status, Onlin
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "15.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-        public virtual int Update(ADOM9DataSet.SalesOrderHeaderDataTable dataTable) {
+        public virtual int Update(ADOM9Dataset.SalesOrderHeaderDataTable dataTable) {
             return this.Adapter.Update(dataTable);
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "15.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-        public virtual int Update(ADOM9DataSet dataSet) {
+        public virtual int Update(ADOM9Dataset dataSet) {
             return this.Adapter.Update(dataSet, "SalesOrderHeader");
         }
         
@@ -5581,7 +5581,7 @@ SELECT SalesOrderID, SalesOrderDetailID, CarrierTrackingNumber, OrderQty, Produc
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "15.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Fill, true)]
-        public virtual int Fill(ADOM9DataSet.SalesOrderDetailDataTable dataTable) {
+        public virtual int Fill(ADOM9Dataset.SalesOrderDetailDataTable dataTable) {
             this.Adapter.SelectCommand = this.CommandCollection[0];
             if ((this.ClearBeforeFill == true)) {
                 dataTable.Clear();
@@ -5594,9 +5594,9 @@ SELECT SalesOrderID, SalesOrderDetailID, CarrierTrackingNumber, OrderQty, Produc
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "15.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Select, true)]
-        public virtual ADOM9DataSet.SalesOrderDetailDataTable GetData() {
+        public virtual ADOM9Dataset.SalesOrderDetailDataTable GetData() {
             this.Adapter.SelectCommand = this.CommandCollection[0];
-            ADOM9DataSet.SalesOrderDetailDataTable dataTable = new ADOM9DataSet.SalesOrderDetailDataTable();
+            ADOM9Dataset.SalesOrderDetailDataTable dataTable = new ADOM9Dataset.SalesOrderDetailDataTable();
             this.Adapter.Fill(dataTable);
             return dataTable;
         }
@@ -5604,14 +5604,14 @@ SELECT SalesOrderID, SalesOrderDetailID, CarrierTrackingNumber, OrderQty, Produc
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "15.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-        public virtual int Update(ADOM9DataSet.SalesOrderDetailDataTable dataTable) {
+        public virtual int Update(ADOM9Dataset.SalesOrderDetailDataTable dataTable) {
             return this.Adapter.Update(dataTable);
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "15.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-        public virtual int Update(ADOM9DataSet dataSet) {
+        public virtual int Update(ADOM9Dataset dataSet) {
             return this.Adapter.Update(dataSet, "SalesOrderDetail");
         }
         
@@ -5944,7 +5944,7 @@ SELECT SalesOrderID, SalesOrderDetailID, CarrierTrackingNumber, OrderQty, Produc
         ///</summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "15.0.0.0")]
-        private int UpdateUpdatedRows(ADOM9DataSet dataSet, global::System.Collections.Generic.List<global::System.Data.DataRow> allChangedRows, global::System.Collections.Generic.List<global::System.Data.DataRow> allAddedRows) {
+        private int UpdateUpdatedRows(ADOM9Dataset dataSet, global::System.Collections.Generic.List<global::System.Data.DataRow> allChangedRows, global::System.Collections.Generic.List<global::System.Data.DataRow> allAddedRows) {
             int result = 0;
             if ((this._salesOrderHeaderTableAdapter != null)) {
                 global::System.Data.DataRow[] updatedRows = dataSet.SalesOrderHeader.Select(null, null, global::System.Data.DataViewRowState.ModifiedCurrent);
@@ -5981,7 +5981,7 @@ SELECT SalesOrderID, SalesOrderDetailID, CarrierTrackingNumber, OrderQty, Produc
         ///</summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "15.0.0.0")]
-        private int UpdateInsertedRows(ADOM9DataSet dataSet, global::System.Collections.Generic.List<global::System.Data.DataRow> allAddedRows) {
+        private int UpdateInsertedRows(ADOM9Dataset dataSet, global::System.Collections.Generic.List<global::System.Data.DataRow> allAddedRows) {
             int result = 0;
             if ((this._salesOrderHeaderTableAdapter != null)) {
                 global::System.Data.DataRow[] addedRows = dataSet.SalesOrderHeader.Select(null, null, global::System.Data.DataViewRowState.Added);
@@ -6015,7 +6015,7 @@ SELECT SalesOrderID, SalesOrderDetailID, CarrierTrackingNumber, OrderQty, Produc
         ///</summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "15.0.0.0")]
-        private int UpdateDeletedRows(ADOM9DataSet dataSet, global::System.Collections.Generic.List<global::System.Data.DataRow> allChangedRows) {
+        private int UpdateDeletedRows(ADOM9Dataset dataSet, global::System.Collections.Generic.List<global::System.Data.DataRow> allChangedRows) {
             int result = 0;
             if ((this._salesOrderDetailTableAdapter != null)) {
                 global::System.Data.DataRow[] deletedRows = dataSet.SalesOrderDetail.Select(null, null, global::System.Data.DataViewRowState.Deleted);
@@ -6073,7 +6073,7 @@ SELECT SalesOrderID, SalesOrderDetailID, CarrierTrackingNumber, OrderQty, Produc
         ///</summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "15.0.0.0")]
-        public virtual int UpdateAll(ADOM9DataSet dataSet) {
+        public virtual int UpdateAll(ADOM9Dataset dataSet) {
             if ((dataSet == null)) {
                 throw new global::System.ArgumentNullException("dataSet");
             }
