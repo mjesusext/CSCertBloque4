@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Modulo9.ADO;
 using Modulo9.ADO.ADOM9DatasetTableAdapters;
+using System.Data.SqlClient;
 
 namespace Modulo9
 {
@@ -108,7 +109,6 @@ namespace Modulo9
             int counter = 0;
             string prompt_input = "";
 
-
             using (SalesOrderHeaderTableAdapter OrderHeadTabAdpt = new SalesOrderHeaderTableAdapter())
             {
                 //Rellenar con todo
@@ -147,18 +147,139 @@ namespace Modulo9
             }
         }
 
-        private static void ADOSGetAndManageOrderHeader()
+        private static int ManageOrderHeaderMenu()
         {
-           
+            int menu_opt = -1;
+            Console.WriteLine("\n" +
+                              "1) Eliminar pedido\n" +
+                              "2) Mostrar datos cabecera pedido\n" +
+                              "3) Mostrar desglose de pedido\n" +
+                              "0) Volver\n");
+            do
+            {
+                Console.Write("Opción: ");
+            }
+            while (!int.TryParse(Console.ReadLine(), out menu_opt));
+
+            return menu_opt;
         }
 
-        private static void ADODeleteOrderHeader() { }
+        private static void ADOSGetAndManageOrderHeader()
+        {
+            int OrdID = 0;
+            int RetrieveMenuOpt = 0;
+            bool next_opt = true;
 
-        private static void ADOShowQuoteHeader() { }
+            ADOM9Dataset.SalesOrderHeaderRow SelOrdHeader;
+            SalesOrderHeaderTableAdapter OrderHeadTabAdpt;
+
+            //Bucle de retrieve
+            do
+            {
+                Console.Write("Introduzca identificador de Order Header: ");
+
+                while (!int.TryParse(Console.ReadLine(), out OrdID))
+                {
+                    Console.WriteLine("Input incorrecto. Introduzca un número entero");
+                }
+
+                SelOrdHeader = DataADO.SalesOrderHeader.FindBySalesOrderID(OrdID);
+
+                if (SelOrdHeader == null)
+                {
+                    Console.WriteLine("Dataset vacío o clave introducida no existe.\n" +
+                                      "Escoja una opcion:\n" +
+                                      "1) Reintentar recuperando BD previamente\n" +
+                                      "2) Reintentar\n" +
+                                      "3) Volver a menú pirncipal");
+                    do
+                    {
+                        Console.Write("Opción: ");
+
+                    } while (!int.TryParse(Console.ReadLine(), out RetrieveMenuOpt));
+
+                    switch (RetrieveMenuOpt)
+                    {
+                        case 1:
+                            OrderHeadTabAdpt = new SalesOrderHeaderTableAdapter();
+                            OrderHeadTabAdpt.Fill(DataADO.SalesOrderHeader);
+                            OrderHeadTabAdpt.Dispose();
+                            break;
+                        case 2:
+                            break;
+                        case 3:
+                            return;
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("ID: {0} " +
+                                     "\n\t- Fecha de pedido:  {1} " +
+                                     "\n\t- Núm pedido: {2} " +
+                                     "\n\t- Núm cliente: {3} " +
+                                     "\n\t- Importe total: {4} ",
+                                     SelOrdHeader.SalesOrderID,
+                                     SelOrdHeader.OrderDate,
+                                     SelOrdHeader.IsNull("PurchaseOrderNumber") ? "----" : SelOrdHeader.PurchaseOrderNumber,
+                                     SelOrdHeader.CustomerID,
+                                     SelOrdHeader.TotalDue);
+                    next_opt = false;
+                }
+            } while (next_opt);
+
+            //Reset de bucle de menu
+            next_opt = true;
+
+            //Bucle de procesado sobre OrderHeader recuperado
+            do
+            {
+                switch (ManageOrderHeaderMenu())
+                {
+                    case 0:
+                        next_opt = false;
+                        break;
+                    case 1:
+                        ADODeleteOrderHeader(SelOrdHeader);
+                        next_opt = false;
+                        break;
+                    case 2:
+                        ADOShowFullOrderHeader(SelOrdHeader);
+                        break;
+                    case 3:
+                        ADOShowAndManageQuoteDetails(SelOrdHeader);
+                        break;
+                    default:
+                        Console.WriteLine("\n--- ERROR: Opción incorrecta. Reintentelo --\n");
+                        break;
+                }
+            }
+            while (next_opt);
+        }
+
+        private static void ADODeleteOrderHeader(ADOM9Dataset.SalesOrderHeaderRow Row)
+        {
+            Console.WriteLine("Confirme la eliminación del pedido escribiendo \"x\": ");
+
+            if(Console.ReadLine().ToLower() == "x")
+            {
+                //Este metodo no marca la linea, directamente acepta el cambio. Delete unicamente marca la linea y después hay que hacer "AcceptChanges" para que la coja el dataset
+                DataADO.SalesOrderHeader.RemoveSalesOrderHeaderRow(Row);
+            }
+
+            //Actualizar base de datos
+        }
+
+        private static void ADOShowFullOrderHeader(ADOM9Dataset.SalesOrderHeaderRow Row)
+        {
+
+        }
         #endregion
 
         #region OrderDetail Methods
-        private static void ADOShowAndManageQuoteDetails() { }
+        private static void ADOShowAndManageQuoteDetails(ADOM9Dataset.SalesOrderHeaderRow Row)
+        {
+
+        }
 
         private static void ADOEditQuantityQuoteDetail() { }
 
