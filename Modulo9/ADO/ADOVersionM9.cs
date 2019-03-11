@@ -296,25 +296,100 @@ namespace Modulo9
         #endregion
 
         #region OrderDetail Methods
-        private static void ADOShowAndManageQuoteDetails(ADOM9Dataset.SalesOrderHeaderRow Row)
+        private static void ADOShowAndManageQuoteDetails(ADOM9Dataset.SalesOrderHeaderRow QuoteHeaderRow)
         {
-            Console.WriteLine("Información de detalle asociado a la cabecera escogida:");
+            SalesOrderDetailTableAdapter OrderDetailTabAdpt;
 
-            //Procedimiento: Sencillo pero poco eficiente
-                //GetData en dataset de detalles
-                //Recuperamos los registros de SalesOrderDetail a partir de la relación entre Header y Detail.
-                //Esto dará una colección de filas a procesar para el resto de métodos
+            //Nos traemos todos los detalles de pedido para operar
+            OrderDetailTabAdpt = new SalesOrderDetailTableAdapter();
+            OrderDetailTabAdpt.Fill(DataADO.SalesOrderDetail);
+            OrderDetailTabAdpt.Dispose();
+
+            //Mostramos información
+            Console.WriteLine("Información de detalle asociado a la cabecera escogida (ID {0})", QuoteHeaderRow.SalesOrderID);
+
+            foreach (ADOM9Dataset.SalesOrderDetailRow OrderDetailRow in QuoteHeaderRow.GetSalesOrderDetailRows())
+            {
+                Console.WriteLine("ID: {0}" +
+                                  "\n\t- Producto: {1} " +
+                                  "\n\t- Cantidad: {2} " +
+                                  "\n\t- Importe unitario: {3} ",
+                                  OrderDetailRow.SalesOrderDetailID,
+                                  OrderDetailRow.ProductID,
+                                  OrderDetailRow.OrderQty,
+                                  OrderDetailRow.UnitPrice);
+            }
             
-
+            //Seleccionamos modo
         }
 
-        private static void ADOEditQuantityQuoteDetail() { }
+        private static void ADOEditQuantityQuoteDetail(ADOM9Dataset.SalesOrderDetailRow Row) { }
 
-        private static void ADOEditUnitCostQuoteDetail() { }
+        private static void ADOEditUnitCostQuoteDetail(ADOM9Dataset.SalesOrderDetailRow Row) { }
 
-        private static void ADODeleteQuoteDetail() { }
+        private static void ADODeleteQuoteDetail(ADOM9Dataset.SalesOrderDetailRow Row)
+        {
+            SalesOrderDetailTableAdapter OrderDetTabAdpt;
 
-        private static void ADOAddQuoteDetail() { }
+            //Marcamos fila para eliminación (y automaticamente todo lo relacionado con esta, debido a restricciones de tabla)
+            //Console.WriteLine("Estado de fila inicial: {0}", Row.RowState);
+            Row.Delete();
+            //Console.WriteLine("Estado de fila al eliminar: {0}", Row.RowState);
+
+            Console.WriteLine("Confirme la eliminación del pedido escribiendo \"x\": ");
+
+            if (Console.ReadLine().ToLower() == "x")
+            {
+                //Persistimos fila eliminada en base de datos
+                OrderDetTabAdpt = new SalesOrderDetailTableAdapter();
+                OrderDetTabAdpt.Update(DataADO.SalesOrderDetail);
+                OrderDetTabAdpt.Dispose();
+            }
+            else
+            {
+                //Desmarcamos cambios para la fila. Podriamos hacerlo a nivel de tabla o de dataset
+                Row.RejectChanges();
+                //Console.WriteLine("Estado de fila al anular: {0}", Row.RowState);
+            }
+        }
+
+        private static void ADOAddQuoteDetail(int OrderHeaderID)
+        {
+            int ProdID = 0;
+            short ProdQty = 0;
+            decimal ProdPrice = 0M;
+
+            //Creamos fila a partir de definición de tabla.
+            ADOM9Dataset.SalesOrderDetailRow Row = DataADO.SalesOrderDetail.NewSalesOrderDetailRow();
+            Console.WriteLine("Estado de fila recien creada: {0}", Row.RowState);
+
+            //Relacionamos el pedido y pedimos los datos al usuario
+            Row.SalesOrderID = OrderHeaderID;
+
+            do
+            {
+                Console.Write("Introduzca ID producto: ");
+            }
+            while (!int.TryParse(Console.ReadLine(), out ProdID));
+            Row.ProductID = ProdID;
+
+            do
+            {
+                Console.Write("Introduzca cantidad: ");
+            }
+            while (!short.TryParse(Console.ReadLine(), out ProdQty));
+            Row.OrderQty = ProdQty;
+
+            do
+            {
+                Console.Write("Introduzca precio unitario: ");
+            }
+            while (!decimal.TryParse(Console.ReadLine(), out ProdPrice));
+            Row.UnitPrice = ProdPrice;
+
+            Row.AcceptChanges();
+            Console.WriteLine("Estado de fila recien aceptada: {0}", Row.RowState);
+        }
         #endregion
 
 
