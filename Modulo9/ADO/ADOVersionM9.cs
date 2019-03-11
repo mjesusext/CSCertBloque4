@@ -10,42 +10,49 @@ namespace Modulo9
 {
     public static class ADOVersionM9
     {
+        private static ADOM9Dataset DataADO;
+
         public static void Run()
         {
             bool next_opt = true;
-            Console.WriteLine("----- Ejecución de versión ADO del programa -----\n");
 
-            do
+            //Base de datos que contiene estructura de tablas
+            using (DataADO = new ADOM9Dataset())
             {
-                switch (Menu())
+                Console.WriteLine("----- Ejecución de versión ADO del programa -----\n");
+
+                do
                 {
-                    case 0:
-                        next_opt = false;
-                        break;
-                    case 1:
-                        ADOShowProducts();
-                        break;
-                    case 2:
-                        ADOShowQuotes();
-                        break;
-                    case 3:
-                        ADOSGetAndManageQuote();
-                        break;
-                    default:
-                        Console.WriteLine("\n--- ERROR: Opción incorrecta. Reintentelo --\n");
-                        break;
+                    switch (Menu())
+                    {
+                        case 0:
+                            next_opt = false;
+                            break;
+                        case 1:
+                            ADOShowProducts();
+                            break;
+                        case 2:
+                            ADOShowOrderHeaders();
+                            break;
+                        case 3:
+                            ADOSGetAndManageOrderHeader();
+                            break;
+                        default:
+                            Console.WriteLine("\n--- ERROR: Opción incorrecta. Reintentelo --\n");
+                            break;
+                    }
                 }
+                while (next_opt);
             }
-            while (next_opt);
         }
 
-        public static int Menu()
+        private static int Menu()
         {
             int menu_opt = -1;
             Console.WriteLine("\n" +
                               "1) Mostrar productos\n" +
-                              "2) Mostrar pedidos\n" +
-                              "3) Seleccionar pedido\n" +
+                              "2) Mostrar cabecera pedido\n" +
+                              "3) Seleccionar cabecera pedido\n" +
                               "0) Salir\n");
             do
             {
@@ -57,63 +64,109 @@ namespace Modulo9
         }
 
         #region Product Methods
-        public static void ADOShowProducts()
+        private static void ADOShowProducts()
         {
             int counter = 0;
             string prompt_input = "";
 
-            //Base de datos que contiene estructura de tablas
-            ADOM9Dataset DataADO = new ADOM9Dataset();
-
             //Adaptador para descargar datos sobre tabla de dataset
-            ProductTableAdapter ProdTabAdpt = new ProductTableAdapter();
-
-            //Rellenar con todo
-            ProdTabAdpt.Fill(DataADO.Product);
-
-            foreach (ADOM9Dataset.ProductRow Producto in DataADO.Product.Rows)
+            using (ProductTableAdapter ProdTabAdpt = new ProductTableAdapter())
             {
-                Console.WriteLine($"ID: {Producto.ProductID} - Nombre producto {Producto.Name}");
-                counter++;
+                //Rellenar con todo
+                ProdTabAdpt.Fill(DataADO.Product);
 
-                if(counter % 10 == 0)
+                foreach (ADOM9Dataset.ProductRow Producto in DataADO.Product.Rows)
                 {
-                    Console.Write("Introduzca X para salir. Si quiere 10 elementos siguientes, pulse una tecla: ");
-                    prompt_input = Console.ReadLine();
+                    Console.WriteLine("ID: {0} " +
+                                      "- Nombre producto {1}",
+                                      Producto.ProductID,
+                                      Producto.IsNull("Name") ? "----" : Producto.Name);
+                    counter++;
 
-                    if(prompt_input.ToLower() == "x")
+                    if (counter % 10 == 0)
                     {
-                        break;
-                    }
-                    else
-                    {
-                        continue;
+                        Console.Write("Introduzca X para salir. Si quiere 10 elementos siguientes, pulse una tecla: ");
+                        prompt_input = Console.ReadLine();
+
+                        if (prompt_input.ToLower() == "x")
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            continue;
+                        }
                     }
                 }
             }
         }
         #endregion
 
-        #region Quote Methods
-        public static void ADOShowQuotes() { }
+        #region OrderHeader Methods
+        private static void ADOShowOrderHeaders()
+        {
+            int counter = 0;
+            string prompt_input = "";
 
-        public static void ADOSGetAndManageQuote() { }
 
-        public static void ADODeleteQuote() { }
+            using (SalesOrderHeaderTableAdapter OrderHeadTabAdpt = new SalesOrderHeaderTableAdapter())
+            {
+                //Rellenar con todo
+                OrderHeadTabAdpt.Fill(DataADO.SalesOrderHeader);
 
-        public static void ADOShowQuoteHeader() { }
+                foreach (ADOM9Dataset.SalesOrderHeaderRow OrderHeader in DataADO.SalesOrderHeader.Rows)
+                {
+
+                    Console.WriteLine("ID: {0} " +
+                                      "\n\t- Fecha de pedido:  {1} " +
+                                      "\n\t- Núm pedido: {2} " +
+                                      "\n\t- Núm cliente: {3} " +
+                                      "\n\t- Importe total: {4} ",
+                                      OrderHeader.SalesOrderID,
+                                      OrderHeader.OrderDate,
+                                      OrderHeader.IsNull("PurchaseOrderNumber") ? "----" : OrderHeader.PurchaseOrderNumber,
+                                      OrderHeader.CustomerID,
+                                      OrderHeader.TotalDue);
+                    counter++;
+
+                    if (counter % 10 == 0)
+                    {
+                        Console.Write("Introduzca X para salir. Si quiere 10 elementos siguientes, pulse una tecla: ");
+                        prompt_input = Console.ReadLine();
+
+                        if (prompt_input.ToLower() == "x")
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                    }
+                }
+            }
+        }
+
+        private static void ADOSGetAndManageOrderHeader()
+        {
+           
+        }
+
+        private static void ADODeleteOrderHeader() { }
+
+        private static void ADOShowQuoteHeader() { }
         #endregion
 
-        #region QuoteDetail Methods
-        public static void ADOShowAndManageQuoteDetails() { }
+        #region OrderDetail Methods
+        private static void ADOShowAndManageQuoteDetails() { }
 
-        public static void ADOEditQuantityQuoteDetail() { }
+        private static void ADOEditQuantityQuoteDetail() { }
 
-        public static void ADOEditUnitCostQuoteDetail() { }
+        private static void ADOEditUnitCostQuoteDetail() { }
 
-        public static void ADODeleteQuoteDetail() { }
+        private static void ADODeleteQuoteDetail() { }
 
-        public static void ADOAddQuoteDetail() { }
+        private static void ADOAddQuoteDetail() { }
         #endregion
 
 
