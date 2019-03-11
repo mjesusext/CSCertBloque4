@@ -258,26 +258,53 @@ namespace Modulo9
 
         private static void ADODeleteOrderHeader(ADOM9Dataset.SalesOrderHeaderRow Row)
         {
+            SalesOrderHeaderTableAdapter OrderHeadTabAdpt;
+
+            //Marcamos fila para eliminación (y automaticamente todo lo relacionado con esta, debido a restricciones de tabla)
+            //Console.WriteLine("Estado de fila inicial: {0}", Row.RowState);
+            Row.Delete();
+            //Console.WriteLine("Estado de fila al eliminar: {0}", Row.RowState);
+
             Console.WriteLine("Confirme la eliminación del pedido escribiendo \"x\": ");
 
             if(Console.ReadLine().ToLower() == "x")
             {
-                //Este metodo no marca la linea, directamente acepta el cambio. Delete unicamente marca la linea y después hay que hacer "AcceptChanges" para que la coja el dataset
-                DataADO.SalesOrderHeader.RemoveSalesOrderHeaderRow(Row);
+                //Persistimos fila eliminada en base de datos
+                OrderHeadTabAdpt = new SalesOrderHeaderTableAdapter();
+                OrderHeadTabAdpt.Update(DataADO.SalesOrderHeader);
+                OrderHeadTabAdpt.Dispose();
             }
-
-            //Actualizar base de datos
+            else
+            {
+                //Desmarcamos cambios para la fila. Podriamos hacerlo a nivel de tabla o de dataset
+                Row.RejectChanges();
+                //Console.WriteLine("Estado de fila al anular: {0}", Row.RowState);
+            }
         }
 
         private static void ADOShowFullOrderHeader(ADOM9Dataset.SalesOrderHeaderRow Row)
         {
+            Console.WriteLine("Información completa de la cabecera escogida:");
 
+            foreach (System.Data.DataColumn item in Row.Table.Columns)
+            {
+                Console.WriteLine("\t- {0}: {1} ", item.ColumnName, Row[item.ColumnName]);
+            }
+
+            Console.WriteLine();
         }
         #endregion
 
         #region OrderDetail Methods
         private static void ADOShowAndManageQuoteDetails(ADOM9Dataset.SalesOrderHeaderRow Row)
         {
+            Console.WriteLine("Información de detalle asociado a la cabecera escogida:");
+
+            //Procedimiento: Sencillo pero poco eficiente
+                //GetData en dataset de detalles
+                //Recuperamos los registros de SalesOrderDetail a partir de la relación entre Header y Detail.
+                //Esto dará una colección de filas a procesar para el resto de métodos
+            
 
         }
 
