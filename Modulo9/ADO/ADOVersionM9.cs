@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using Modulo9.ADO;
 using Modulo9.ADO.ADOM9DatasetTableAdapters;
 using System.Data.SqlClient;
+using System.Data;
+using System.Threading;
 
 namespace Modulo9
 {
@@ -265,13 +267,13 @@ namespace Modulo9
             Row.Delete();
             //Console.WriteLine("Estado de fila al eliminar: {0}", Row.RowState);
 
-            Console.WriteLine("Confirme la eliminación del pedido escribiendo \"x\": ");
+            Console.Write("Confirme la eliminación del pedido escribiendo \"x\": ");
 
             if(Console.ReadLine().ToLower() == "x")
             {
                 //Persistimos fila eliminada en base de datos
                 OrderHeadTabAdpt = new SalesOrderHeaderTableAdapter();
-                OrderHeadTabAdpt.Update(DataADO.SalesOrderHeader);
+                OrderHeadTabAdpt.Update(Row);
                 OrderHeadTabAdpt.Dispose();
             }
             else
@@ -280,6 +282,12 @@ namespace Modulo9
                 Row.RejectChanges();
                 //Console.WriteLine("Estado de fila al anular: {0}", Row.RowState);
             }
+
+            //Existe regla de integridad referencial que borra los detalles asociados a la cabecera si esta es eliminada
+            /*ALTER TABLE [Sales].[SalesOrderDetail]  WITH CHECK ADD  CONSTRAINT [FK_SalesOrderDetail_SalesOrderHeader_SalesOrderID] FOREIGN KEY([SalesOrderID])
+            REFERENCES [Sales].[SalesOrderHeader] ([SalesOrderID])
+            ON DELETE CASCADE
+            GO*/
         }
 
         private static void ADOShowFullOrderHeader(ADOM9Dataset.SalesOrderHeaderRow Row)
@@ -298,17 +306,23 @@ namespace Modulo9
         #region OrderDetail Methods
         private static void ADOShowAndManageQuoteDetails(ADOM9Dataset.SalesOrderHeaderRow QuoteHeaderRow)
         {
+            bool next_opt = true;
             SalesOrderDetailTableAdapter OrderDetailTabAdpt;
+            ADOM9Dataset.SalesOrderDetailRow [] RelatedOrderDetails;
 
             //Nos traemos todos los detalles de pedido para operar
-            OrderDetailTabAdpt = new SalesOrderDetailTableAdapter();
-            OrderDetailTabAdpt.Fill(DataADO.SalesOrderDetail);
-            OrderDetailTabAdpt.Dispose();
+            using (OrderDetailTabAdpt = new SalesOrderDetailTableAdapter())
+            {
+                OrderDetailTabAdpt.Fill(DataADO.SalesOrderDetail);
+            }
 
             //Mostramos información
             Console.WriteLine("Información de detalle asociado a la cabecera escogida (ID {0})", QuoteHeaderRow.SalesOrderID);
 
-            foreach (ADOM9Dataset.SalesOrderDetailRow OrderDetailRow in QuoteHeaderRow.GetSalesOrderDetailRows())
+            //Recuperamos todo el set de Order Details asociados para mostrar y seleccionar en métodos posteriores
+            RelatedOrderDetails = QuoteHeaderRow.GetSalesOrderDetailRows();
+
+            foreach (ADOM9Dataset.SalesOrderDetailRow OrderDetailRow in RelatedOrderDetails)
             {
                 Console.WriteLine("ID: {0}" +
                                   "\n\t- Producto: {1} " +
@@ -319,52 +333,298 @@ namespace Modulo9
                                   OrderDetailRow.OrderQty,
                                   OrderDetailRow.UnitPrice);
             }
-            
-            //Seleccionamos modo
+
+            //Bucle de procesado sobre OrderDetails recuperados
+            do
+            {
+                switch (ManageOrderDetailMenu())
+                {
+                    case 0:
+                        next_opt = false;
+                        break;
+                    case 1:
+                        ADOEditQuantityQuoteDetail(RelatedOrderDetails);
+                        break;
+                    case 2:
+                        ADOEditUnitCostQuoteDetail(RelatedOrderDetails);
+                        break;
+                    case 3:
+                        ADODeleteQuoteDetail(RelatedOrderDetails);
+                        break;
+                    case 4:
+                        ADOAddQuoteDetail(QuoteHeaderRow);
+                        
+                        //Actualizamos datos internos que no tenemos en el momento de crear (IDs internos, autonumerados...)
+                        using (OrderDetailTabAdpt = new SalesOrderDetailTableAdapter())
+                        {
+                            OrderDetailTabAdpt.Fill(DataADO.SalesOrderDetail);
+                        }
+
+                        break;
+                    default:
+                        Console.WriteLine("\n--- ERROR: Opción incorrecta. Reintentelo --\n");
+                        break;
+                }
+            }
+            while (next_opt);
         }
 
-        private static void ADOEditQuantityQuoteDetail(ADOM9Dataset.SalesOrderDetailRow Row) { }
+        private static int ManageOrderDetailMenu()
+        {
+            int menu_opt = -1;
+            Console.WriteLine("\n" +
+                              "1) Modificar cantidad detalle pedido\n" +
+                              "2) Modificar importe detalle pedido\n" +
+                              "3) Eliminar detalle pedido\n" +
+                              "4) Añadir detalle pedido\n" +
+                              "0) Volver\n");
+            do
+            {
+                Console.Write("Opción: ");
+            }
+            while (!int.TryParse(Console.ReadLine(), out menu_opt));
 
-        private static void ADOEditUnitCostQuoteDetail(ADOM9Dataset.SalesOrderDetailRow Row) { }
+            return menu_opt;
+        }
 
-        private static void ADODeleteQuoteDetail(ADOM9Dataset.SalesOrderDetailRow Row)
+        private static void ADOEditQuantityQuoteDetail(ADOM9Dataset.SalesOrderDetailRow[] Rows)
         {
             SalesOrderDetailTableAdapter OrderDetTabAdpt;
+            SalesOrderHeaderTableAdapter OrderHeadTabAdpt;
+            ADOM9Dataset.SalesOrderDetailRow Row;
+            ADOM9Dataset.SalesOrderHeaderRow HeaderRow;
 
-            //Marcamos fila para eliminación (y automaticamente todo lo relacionado con esta, debido a restricciones de tabla)
+            int OrderDetailID = 0;
+            short Quantity = 0;
+
+            //Indicar ID de quote detail a procesar
+            do
+            {
+                do
+                {
+                    Console.Write("Indique ID de order detail a editar cantidad: ");
+                } while (!int.TryParse(Console.ReadLine(), out OrderDetailID));
+
+                Row = Rows.FirstOrDefault(x => x.SalesOrderDetailID == OrderDetailID);
+            } while (Row == default(ADOM9Dataset.SalesOrderDetailRow));
+
+            do
+            {
+                Console.Write("Nueva cantidad: ");
+            } while (!short.TryParse(Console.ReadLine(), out Quantity));
+
+            HeaderRow = DataADO.SalesOrderHeader.FindBySalesOrderID(Row.SalesOrderID);
+
+            Console.WriteLine("Estado de fila al solicitar modificación: {0}", Row.RowState);
+            try
+            {
+                //Quitamos precio total de linea actual de la cabecera, luego recalculamos detalle y añadimos el resultado a cabecera
+                HeaderRow.SubTotal -= Row.LineTotal;
+
+                Row.OrderQty = Quantity;
+                HeaderRow.SubTotal += Row.LineTotal;
+
+                //Actualizamos tablas
+                using (OrderDetTabAdpt = new SalesOrderDetailTableAdapter())
+                {
+                    OrderDetTabAdpt.Update(Row);
+                }
+
+                using (OrderHeadTabAdpt = new SalesOrderHeaderTableAdapter())
+                {
+                    OrderHeadTabAdpt.Update(HeaderRow);
+                }
+            }
+            catch (ArgumentNullException e)
+            {
+                Console.WriteLine("ERROR: Argumento nulo en comando update. Detalle: {0}", e.Message);
+                Row.RejectChanges();
+                HeaderRow.RejectChanges();
+            }
+            catch (InvalidOperationException e)
+            {
+                Console.WriteLine("ERROR: Operación no valida. Detalle: {0}", e.Message);
+                Row.RejectChanges();
+                HeaderRow.RejectChanges();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("ERROR desconocido. Detalle: {0}", e.Message);
+                Row.RejectChanges();
+                HeaderRow.RejectChanges();
+            }
+
+            Console.WriteLine("Estado de fila al final de comando: {0}", Row.RowState);
+        }
+
+        private static void ADOEditUnitCostQuoteDetail(ADOM9Dataset.SalesOrderDetailRow[] Rows)
+        {
+            SalesOrderDetailTableAdapter OrderDetTabAdpt;
+            SalesOrderHeaderTableAdapter OrderHeadTabAdpt;
+            ADOM9Dataset.SalesOrderDetailRow Row;
+            ADOM9Dataset.SalesOrderHeaderRow HeaderRow;
+            int OrderDetailID = 0;
+            decimal UnitCost = 0;
+
+            //Indicar ID de quote detail a procesar
+            do
+            {
+                do
+                {
+                    Console.Write("Indique ID de order detail a editar precio unitario: ");
+                } while (!int.TryParse(Console.ReadLine(), out OrderDetailID));
+
+                Row = Rows.First(x => x.SalesOrderDetailID == OrderDetailID);
+            } while (Row == null);
+
+            do
+            {
+                Console.Write("Nuevo precio unitario: ");
+            } while (!decimal.TryParse(Console.ReadLine(), out UnitCost));
+
+            HeaderRow = DataADO.SalesOrderHeader.FindBySalesOrderID(Row.SalesOrderID);
+
+            try
+            {
+                //Quitamos precio total de linea actual de la cabecera, luego recalculamos detalle y añadimos el resultado a cabecera
+                HeaderRow.SubTotal -= Row.LineTotal;
+
+                Row.UnitPrice = UnitCost;
+                HeaderRow.SubTotal += Row.LineTotal;
+
+                //Actualizamos tablas
+                using (OrderDetTabAdpt = new SalesOrderDetailTableAdapter())
+                {
+                    OrderDetTabAdpt.Update(Row);
+                }
+                using (OrderHeadTabAdpt = new SalesOrderHeaderTableAdapter())
+                {
+                    OrderHeadTabAdpt.Update(HeaderRow);
+                }
+            }
+            catch (ArgumentNullException e)
+            {
+                Console.WriteLine("ERROR: Argumento nulo en comando update. Detalle: {0}", e.Message);
+                Row.RejectChanges();
+                HeaderRow.RejectChanges();
+            }
+            catch (InvalidOperationException e)
+            {
+                Console.WriteLine("ERROR: Operación no valida. Detalle: {0}", e.Message);
+                Row.RejectChanges();
+                HeaderRow.RejectChanges();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("ERROR desconocido. Detalle: {0}", e.Message);
+                Row.RejectChanges();
+                HeaderRow.RejectChanges();
+            }
+        }
+
+        private static void ADODeleteQuoteDetail(ADOM9Dataset.SalesOrderDetailRow[] Rows)
+        {
+            SalesOrderDetailTableAdapter OrderDetTabAdpt;
+            SalesOrderHeaderTableAdapter OrderHeadTabAdpt;
+            ADOM9Dataset.SalesOrderDetailRow Row;
+            ADOM9Dataset.SalesOrderHeaderRow HeaderRow;
+            int OrderDetailID = 0;
+            
+            //Indicar ID de quote detail a procesar
+            do
+            {
+                do
+                {
+                    Console.Write("Indique ID de order detail a eliminar: ");
+                } while (!int.TryParse(Console.ReadLine(), out OrderDetailID));
+
+                Row = Rows.FirstOrDefault(x => x.SalesOrderDetailID == OrderDetailID);
+            } while (Row == default(ADOM9Dataset.SalesOrderDetailRow));
+
+            //Realizamos consultas sobre valor y marcamos fila para eliminación (y automaticamente todo lo relacionado con esta, debido a restricciones de tabla)
+            //Una vez marcado para eliminación, no se puede usar el dato...
             //Console.WriteLine("Estado de fila inicial: {0}", Row.RowState);
-            Row.Delete();
-            //Console.WriteLine("Estado de fila al eliminar: {0}", Row.RowState);
+            HeaderRow = DataADO.SalesOrderHeader.FindBySalesOrderID(Row.SalesOrderID);
+            HeaderRow.SubTotal -= Row.LineTotal;
 
-            Console.WriteLine("Confirme la eliminación del pedido escribiendo \"x\": ");
+            Row.Delete();
+            Console.WriteLine("Estado de fila al solicitar eliminar: {0}", Row.RowState);
+
+            Console.Write("Confirme la eliminación del pedido escribiendo \"x\": ");
 
             if (Console.ReadLine().ToLower() == "x")
             {
-                //Persistimos fila eliminada en base de datos
-                OrderDetTabAdpt = new SalesOrderDetailTableAdapter();
-                OrderDetTabAdpt.Update(DataADO.SalesOrderDetail);
-                OrderDetTabAdpt.Dispose();
+                try
+                {
+                    //Actualizamos tablas
+                    using (OrderDetTabAdpt = new SalesOrderDetailTableAdapter())
+                    {
+                        OrderDetTabAdpt.Update(Row);
+                    }
+                    using (OrderHeadTabAdpt = new SalesOrderHeaderTableAdapter())
+                    {
+                        OrderHeadTabAdpt.Update(HeaderRow);
+                    }
+                }
+                catch (ArgumentNullException e)
+                {
+                    Console.WriteLine("ERROR: Argumento nulo en comando update. Detalle: {0}", e.Message);
+                    HeaderRow.RejectChanges();
+                    Row.RejectChanges();
+                }
+                catch (InvalidOperationException e)
+                {
+                    Console.WriteLine("ERROR: Operación no valida. Detalle: {0}", e.Message);
+                    HeaderRow.RejectChanges();
+                    Row.RejectChanges();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("ERROR desconocido. Detalle: {0}", e.Message);
+                    HeaderRow.RejectChanges();
+                    Row.RejectChanges();
+                }
             }
             else
             {
-                //Desmarcamos cambios para la fila. Podriamos hacerlo a nivel de tabla o de dataset
+                //Desmarcamos cambios para las filas. Podriamos hacerlo a nivel de tabla o de dataset
                 Row.RejectChanges();
+                HeaderRow.RejectChanges();
                 //Console.WriteLine("Estado de fila al anular: {0}", Row.RowState);
             }
+
+            Console.WriteLine("Estado de fila final comando: {0}", Row.RowState);
         }
 
-        private static void ADOAddQuoteDetail(int OrderHeaderID)
+        private static void ADOAddQuoteDetail(ADOM9Dataset.SalesOrderHeaderRow HeaderRow)
         {
             int ProdID = 0;
             short ProdQty = 0;
             decimal ProdPrice = 0M;
+            SalesOrderDetailTableAdapter OrderDetTabAdpt;
+            SalesOrderHeaderTableAdapter OrderHeadTabAdpt;
+            ADOM9Dataset.SalesOrderDetailRow Row;
+            
+            //Creamos fila vacía con configuraciones a partir de definición de tabla.
+            Row = DataADO.SalesOrderDetail.NewSalesOrderDetailRow();
+            //Console.WriteLine("Estado de fila recien creada: {0}", Row.RowState);
 
-            //Creamos fila a partir de definición de tabla.
-            ADOM9Dataset.SalesOrderDetailRow Row = DataADO.SalesOrderDetail.NewSalesOrderDetailRow();
-            Console.WriteLine("Estado de fila recien creada: {0}", Row.RowState);
+            //Relacionamos el pedido y datos por defecto.
+            Row.SalesOrderID = HeaderRow.SalesOrderID;
 
-            //Relacionamos el pedido y pedimos los datos al usuario
-            Row.SalesOrderID = OrderHeaderID;
+            //Restriccion clave compuesta producto y descuento producto
+            /*ALTER TABLE [Sales].[SalesOrderDetail]  WITH CHECK 
+            ADD  CONSTRAINT [FK_SalesOrderDetail_SpecialOfferProduct_SpecialOfferIDProductID] FOREIGN KEY([SpecialOfferID], [ProductID])
+            REFERENCES [Sales].[SpecialOfferProduct] ([SpecialOfferID], [ProductID])
+            GO*/
+            
+            //Implicitamente, asumimos que si no exist en la tabla de configuración de descuentos, no existira producto.
+            //Por eso no peta de forma directa si metemos IDProducto mal
+            Row.SpecialOfferID = 1;
+            
+            Row.UnitPriceDiscount = 0M;
+            Row.rowguid = Guid.NewGuid();
+            Row.ModifiedDate = DateTime.Today;
 
             do
             {
@@ -372,6 +632,19 @@ namespace Modulo9
             }
             while (!int.TryParse(Console.ReadLine(), out ProdID));
             Row.ProductID = ProdID;
+
+            //Comprobación forzada de producto
+            using (ProductTableAdapter ProdTabAdpt = new ProductTableAdapter())
+            {
+                ProdTabAdpt.Fill(DataADO.Product);
+
+                if(DataADO.Product.FindByProductID(ProdID) == null)
+                {
+                    Console.WriteLine("Producto no existe");
+                    Row.RejectChanges();
+                    return;
+                }
+            }
 
             do
             {
@@ -385,13 +658,62 @@ namespace Modulo9
                 Console.Write("Introduzca precio unitario: ");
             }
             while (!decimal.TryParse(Console.ReadLine(), out ProdPrice));
-            Row.UnitPrice = ProdPrice;
+            Row.UnitPrice = ProdPrice * ProdQty;
+            
+            Console.WriteLine("Estado de fila antes de incluir: {0}", Row.RowState);
+            //Añadimos la fila instanciada al dataset/tabla para poder disponer de esta tanto en local como en remoto
+            try
+            {
+                DataADO.SalesOrderDetail.AddSalesOrderDetailRow(Row);
+            }
+            catch (ConstraintException e)
+            {
+                Console.WriteLine("ERROR: Violación de restricción en comando Add. Detalle: {0}", e.Message);
+                return;
+            }
+            catch (NoNullAllowedException e)
+            {
+                Console.WriteLine("ERROR: No se admite valor nulo de campo en comando Add. Detalle: {0}", e.Message);
+                return;
+            }
 
-            Row.AcceptChanges();
-            Console.WriteLine("Estado de fila recien aceptada: {0}", Row.RowState);
+            Console.WriteLine("Estado de fila recien atachada: {0}", Row.RowState);
+            //Recalculamos precio total de cabecera de pedido
+            HeaderRow.SubTotal += Row.UnitPrice;
+
+            try
+            {
+                //Actualizamos tablas
+                using (OrderHeadTabAdpt = new SalesOrderHeaderTableAdapter())
+                {
+                    OrderHeadTabAdpt.Update(HeaderRow);
+                }
+                using (OrderDetTabAdpt = new SalesOrderDetailTableAdapter())
+                {
+                    OrderDetTabAdpt.Update(Row);
+                }
+            }
+            catch (ArgumentNullException e)
+            {
+                Console.WriteLine("ERROR: Argumento nulo en comando update. Detalle: {0}", e.Message);
+                Row.RejectChanges();
+                HeaderRow.RejectChanges();
+            }
+            catch (InvalidOperationException e)
+            {
+                Console.WriteLine("ERROR: Operación no valida. Detalle: {0}", e.Message);
+                Row.RejectChanges();
+                HeaderRow.RejectChanges();
+            }
+            //Claves foraneas de tablas
+            catch (Exception e)
+            {
+                Console.WriteLine("ERROR desconocido. Detalle: {0}", e.Message);
+                Row.RejectChanges();
+                HeaderRow.RejectChanges();
+            }
+            Console.WriteLine("Estado de fila al final de comando: {0}", Row.RowState);
         }
         #endregion
-
-
     }
 }
