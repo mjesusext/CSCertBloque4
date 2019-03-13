@@ -137,22 +137,24 @@ namespace Modulo9
 
         private static void GetProducts() { }
 
-        private static void GetSalesOrderHeaders() { }
-
-        private static void GetSalesOrderDetails() { }
-
         private static void SendSalesOrderHeader(ADOM9Dataset.SalesOrderHeaderRow Row)
         {
             int send_rows = 0;
-            int received_rows = 0;
+            int DetailReceived_rows = 0;
+            int HeaderReceived_rows = 0;
 
             using (SalesOrderHeaderTableAdapter OrderHeadTabAdpt = new SalesOrderHeaderTableAdapter())
             {
                 try
                 {
                     send_rows = OrderHeadTabAdpt.Update(Row);
-                    //Forzamos get del dataset para recuperar campos calculados o cambiados por trigger
-                    received_rows = OrderHeadTabAdpt.Fill(DataADO.SalesOrderHeader);
+
+                    //Forzamos get de tabla y de sus relacionadas para recuperar campos calculados o cambiados por trigger
+                    HeaderReceived_rows = OrderHeadTabAdpt.Fill(DataADO.SalesOrderHeader);
+                    using (SalesOrderDetailTableAdapter OrderDetailTabAdpt = new SalesOrderDetailTableAdapter())
+                    {
+                        DetailReceived_rows = OrderDetailTabAdpt.Fill(DataADO.SalesOrderDetail);
+                    }
                 }
                 catch (DBConcurrencyException e)
                 {
@@ -187,22 +189,33 @@ namespace Modulo9
                                   "\tenviados: {0}\n" +
                                   "\trecibidos {1}",
                                   send_rows,
-                                  received_rows);
+                                  HeaderReceived_rows);
+
+                Console.WriteLine("Registros OrderDetail\n" +
+                                  "\tenviados: ---\n" +
+                                  "\trecibidos {0}",
+                                  DetailReceived_rows);
             }
         }
 
         private static void SendSalesOrderDetail(ADOM9Dataset.SalesOrderDetailRow Row)
         {
             int send_rows = 0;
-            int received_rows = 0;
+            int DetailReceived_rows = 0;
+            int HeaderReceived_rows = 0;
 
             using (SalesOrderDetailTableAdapter OrderDetailTabAdpt = new SalesOrderDetailTableAdapter())
             {
                 try
                 {
                     send_rows = OrderDetailTabAdpt.Update(Row);
-                    //Forzamos get del dataset para recuperar campos calculados o cambiados por trigger
-                    received_rows = OrderDetailTabAdpt.Fill(DataADO.SalesOrderDetail);
+                    
+                    //Forzamos get de tabla y de sus relacionadas para recuperar campos calculados o cambiados por trigger
+                    DetailReceived_rows = OrderDetailTabAdpt.Fill(DataADO.SalesOrderDetail);
+                    using (SalesOrderHeaderTableAdapter OrderHeaderTabAdpt = new SalesOrderHeaderTableAdapter())
+                    {
+                        HeaderReceived_rows = OrderHeaderTabAdpt.Fill(DataADO.SalesOrderHeader);
+                    }
 
                 }
                 catch (DBConcurrencyException e)
@@ -238,7 +251,12 @@ namespace Modulo9
                                   "\tenviados: {0}\n" +
                                   "\trecibidos {1}",
                                   send_rows,
-                                  received_rows);
+                                  DetailReceived_rows);
+
+                Console.WriteLine("Registros OrderHeader\n" +
+                  "\tenviados: ---\n" +
+                  "\trecibidos {0}",
+                  HeaderReceived_rows);
             }
         }
 
@@ -407,7 +425,6 @@ namespace Modulo9
                 Row = DataADO.SalesOrderHeader.FindBySalesOrderID(OrdHeaderID);
                 Row.Delete();
                 SendSalesOrderHeader(Row);
-                //Recuperar OrderDetails para quitar eliminados
             }
         }
         #endregion
@@ -499,16 +516,15 @@ namespace Modulo9
                 Console.Write("Nueva cantidad: ");
             } while (!short.TryParse(Console.ReadLine(), out Quantity));
 
-            HeaderRow = DataADO.SalesOrderHeader.FindBySalesOrderID(Row.SalesOrderID);
-
             Console.WriteLine("Estado de fila al solicitar modificación: {0}", Row.RowState);
 
             //Quitamos precio total de linea actual de la cabecera, luego recalculamos detalle y añadimos el resultado a cabecera
             //Lo hace el trigger al editar detalle
+            //HeaderRow = DataADO.SalesOrderHeader.FindBySalesOrderID(Row.SalesOrderID);
             //HeaderRow.SubTotal -= Row.LineTotal;
 
             Row.OrderQty = Quantity;
-            //Lo hace el trigger
+            //Lo hace el trigger al editar detalle
             //HeaderRow.SubTotal += Row.LineTotal;
 
             //Actualizamos detalle, dispara trigger para padre y nos traemos padre
@@ -541,10 +557,9 @@ namespace Modulo9
                 Console.Write("Nuevo precio unitario: ");
             } while (!decimal.TryParse(Console.ReadLine(), out UnitCost));
 
-            HeaderRow = DataADO.SalesOrderHeader.FindBySalesOrderID(Row.SalesOrderID);
-
             //Quitamos precio total de linea actual de la cabecera, luego recalculamos detalle y añadimos el resultado a cabecera
             //Lo hace el trigger de OrderDetail
+            //HeaderRow = DataADO.SalesOrderHeader.FindBySalesOrderID(Row.SalesOrderID);
             //HeaderRow.SubTotal -= Row.LineTotal;
 
             Row.UnitPrice = UnitCost;
@@ -561,6 +576,8 @@ namespace Modulo9
             ADOM9Dataset.SalesOrderDetailRow Row;
             ADOM9Dataset.SalesOrderHeaderRow HeaderRow;
             int OrderDetailID = 0;
+            int OrderHeaderID = 0;
+            decimal LineTotalToSubstract = 0;
             
             //Indicar ID de quote detail a procesar
             do
@@ -579,15 +596,18 @@ namespace Modulo9
             {
                 //Realizamos consultas sobre valor y marcamos fila para eliminación (y automaticamente todo lo relacionado con esta, debido a restricciones de tabla)
                 //Una vez marcado para eliminación, no se puede usar el dato...
-
-                //Lo hace el trigger de OrderDetail
-                HeaderRow = DataADO.SalesOrderHeader.FindBySalesOrderID(Row.SalesOrderID);
-                //HeaderRow.SubTotal -= Row.LineTotal;
+                //NO lo hace el trigger de OrderDetail
+                
+                LineTotalToSubstract = Row.LineTotal;
+                OrderHeaderID = Row.SalesOrderID;
                 Row.Delete();
-
-                //Actualizamos detalle, dispara trigger para padre y nos traemos padre
+                //Actualizamos detalle pero no dispara trigger. Se trae header pero sin actualizar importes
                 SendSalesOrderDetail(Row);
-                //SendSalesOrderHeader(HeaderRow);
+
+                //Segunda operación con la corrección de totales
+                HeaderRow = DataADO.SalesOrderHeader.FindBySalesOrderID(OrderHeaderID);
+                HeaderRow.SubTotal -= LineTotalToSubstract;
+                SendSalesOrderHeader(HeaderRow);
             }
         }
 
@@ -675,15 +695,14 @@ namespace Modulo9
 
             Console.WriteLine("Estado de fila recien atachada: {0}", Row.RowState);
             //Recalculamos precio total de cabecera de pedido
-            HeaderRow = DataADO.SalesOrderHeader.FindBySalesOrderID(OrdHeaderID);
-            HeaderRow.SubTotal += ProdPrice * ProdQty;
-
-            SendSalesOrderHeader(HeaderRow);
+            //Lo hace el trigger al editar detalle
+            //HeaderRow = DataADO.SalesOrderHeader.FindBySalesOrderID(OrdHeaderID);
+            //HeaderRow.SubTotal += ProdPrice * ProdQty;
+            //SendSalesOrderHeader(HeaderRow);
             SendSalesOrderDetail(Row);
 
             Console.WriteLine("Estado de fila al final de comando: {0}", Row.RowState);
         }
-        
         #endregion
     }
 }
