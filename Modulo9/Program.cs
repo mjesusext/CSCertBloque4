@@ -10,6 +10,8 @@ namespace Modulo9
     {
         static void Main(string[] args)
         {
+            //ID Pedido test 43667, productoID test 1
+
             ADOVersionM9.Run();
             //EFVersionM9.Run();
         }
