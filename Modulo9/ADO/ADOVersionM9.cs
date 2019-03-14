@@ -290,7 +290,6 @@ namespace Modulo9
         #endregion
 
         #region OrderHeader Methods
-
         private static void ADOManageOrderHeader()
         {
             bool next_opt = true;
