@@ -43,6 +43,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ADO\ADOM9Dataset.cs">
+      <DependentUpon>ADOM9Dataset.xsd</DependentUpon>
+    </Compile>
     <Compile Include="ADO\ADOM9Dataset.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

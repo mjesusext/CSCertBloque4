@@ -8,7 +8,7 @@
   <Shapes>
     <Shape ID="DesignTable:Product" ZOrder="4" X="177" Y="182" Height="305" Width="190" AdapterExpanded="true" DataTableExpanded="true" OldAdapterHeight="0" OldDataTableHeight="0" SplitterPosition="254" />
     <Shape ID="DesignTable:SalesOrderHeader" ZOrder="3" X="438" Y="185" Height="305" Width="249" AdapterExpanded="true" DataTableExpanded="true" OldAdapterHeight="0" OldDataTableHeight="0" SplitterPosition="254" />
-    <Shape ID="DesignTable:SalesOrderDetail" ZOrder="2" X="755" Y="197" Height="286" Width="241" AdapterExpanded="true" DataTableExpanded="true" OldAdapterHeight="0" OldDataTableHeight="0" SplitterPosition="235" />
+    <Shape ID="DesignTable:SalesOrderDetail" ZOrder="2" X="755" Y="197" Height="343" Width="300" AdapterExpanded="true" DataTableExpanded="true" OldAdapterHeight="0" OldDataTableHeight="0" SplitterPosition="235" />
   </Shapes>
   <Connectors>
     <Connector ID="DesignRelation:FK_SalesOrderDetail_SalesOrderHeader_SalesOrderID" ZOrder="1" LineWidth="11">

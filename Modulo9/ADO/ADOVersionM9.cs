@@ -105,6 +105,7 @@ namespace Modulo9
         private static int PickSalesOrderHeader()
         {
             int OrdID = -1;
+            int received_rows = 0;
             ADOM9Dataset.SalesOrderHeaderRow SelOrdHeader;
 
             do
@@ -112,14 +113,23 @@ namespace Modulo9
                 Console.Write("Introduzca identificador de Order Header: ");
             } while (!int.TryParse(Console.ReadLine(), out OrdID));
 
-            SelOrdHeader = DataADO.SalesOrderHeader.FindBySalesOrderID(OrdID);
-
-            if (SelOrdHeader == null)
+            try
             {
-                Console.WriteLine("Dataset vacío o clave introducida no existe.\n");
+                using (SalesOrderHeaderTableAdapter OrderHeaderTblAdpt = new SalesOrderHeaderTableAdapter())
+                {
+                    received_rows = OrderHeaderTblAdpt.FillBySalesOrderID(DataADO.SalesOrderHeader, OrdID);
+                }
             }
-            else
+            catch (Exception e)
             {
+                Console.WriteLine("ERROR recuperando OrderHeader seleccionado. Detalles {0}", e.Message);
+                OrdID = -1;
+            }
+            
+            if(received_rows > 0)
+            {
+                SelOrdHeader = DataADO.SalesOrderHeader.FindBySalesOrderID(OrdID);
+
                 Console.WriteLine("ID: {0} " +
                                     "\n\t- Fecha de pedido:  {1} " +
                                     "\n\t- Núm pedido: {2} " +
@@ -135,130 +145,107 @@ namespace Modulo9
             return OrdID;
         }
 
-        private static void GetProducts() { }
-
         private static void SendSalesOrderHeader(ADOM9Dataset.SalesOrderHeaderRow Row)
         {
             int send_rows = 0;
-            int DetailReceived_rows = 0;
-            int HeaderReceived_rows = 0;
+            //Calculamos porque una vez lancemos update perdemos visibilidad del cambio
+            bool deletion = Row.RowState == DataRowState.Deleted;
 
+            //Ambito de using grande por si debemos usar adaptador en concurrency exception
             using (SalesOrderHeaderTableAdapter OrderHeadTabAdpt = new SalesOrderHeaderTableAdapter())
             {
                 try
                 {
                     send_rows = OrderHeadTabAdpt.Update(Row);
-
-                    //Forzamos get de tabla y de sus relacionadas para recuperar campos calculados o cambiados por trigger
-                    HeaderReceived_rows = OrderHeadTabAdpt.Fill(DataADO.SalesOrderHeader);
-                    using (SalesOrderDetailTableAdapter OrderDetailTabAdpt = new SalesOrderDetailTableAdapter())
-                    {
-                        DetailReceived_rows = OrderDetailTabAdpt.Fill(DataADO.SalesOrderDetail);
-                    }
+                    Console.WriteLine("Registros OrderHeader enviados: {0}", send_rows);
+                    ReSyncLocalData(OrderHeadTabAdpt, Row.SalesOrderID, deletion);
                 }
                 catch (DBConcurrencyException e)
                 {
-                    Console.WriteLine("ERROR de concurrencia.");
+                    Console.WriteLine("ERROR de concurrencia. Detalle: {0}", e.Message);
 
-                    switch (e.Row.RowState)
+                    Console.WriteLine("Marque X si desea resincronizar con BD: ");
+                    if (Console.ReadLine().ToLower() == "x")
                     {
-                        case DataRowState.Detached:
-                            break;
-                        case DataRowState.Unchanged:
-                            break;
-                        case DataRowState.Added:
-                            break;
-                        case DataRowState.Deleted:
-                            //Console.WriteLine("Intento de borrado en destino de registro que ya no existe. Resuelto");
-                            //Marcamos el borrado como cambio aceptado para que desaparezca del dataset
-                            //e.Row.AcceptChanges();
-                            //rows_OK = 1;
-                            break;
-                        case DataRowState.Modified:
-                            break;
-                        default:
-                            break;
-                    }
+                        ReSyncLocalData(OrderHeadTabAdpt, Row.SalesOrderID, deletion);
+                    };
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine("ERROR desconocido. Detalle: {0}", e.Message);
                 }
-
-                Console.WriteLine("Registros OrderHeader\n" +
-                                  "\tenviados: {0}\n" +
-                                  "\trecibidos {1}",
-                                  send_rows,
-                                  HeaderReceived_rows);
-
-                Console.WriteLine("Registros OrderDetail\n" +
-                                  "\tenviados: ---\n" +
-                                  "\trecibidos {0}",
-                                  DetailReceived_rows);
             }
         }
 
         private static void SendSalesOrderDetail(ADOM9Dataset.SalesOrderDetailRow Row)
         {
             int send_rows = 0;
-            int DetailReceived_rows = 0;
-            int HeaderReceived_rows = 0;
+            //Calculamos porque una vez lancemos update perdemos visibilidad del cambio
+            bool deletion = Row.RowState == DataRowState.Deleted;
 
+            //Ambito de using grande por si debemos usar adaptador en concurrency exception
             using (SalesOrderDetailTableAdapter OrderDetailTabAdpt = new SalesOrderDetailTableAdapter())
             {
                 try
                 {
                     send_rows = OrderDetailTabAdpt.Update(Row);
-                    
-                    //Forzamos get de tabla y de sus relacionadas para recuperar campos calculados o cambiados por trigger
-                    DetailReceived_rows = OrderDetailTabAdpt.Fill(DataADO.SalesOrderDetail);
-                    using (SalesOrderHeaderTableAdapter OrderHeaderTabAdpt = new SalesOrderHeaderTableAdapter())
-                    {
-                        HeaderReceived_rows = OrderHeaderTabAdpt.Fill(DataADO.SalesOrderHeader);
-                    }
-
+                    Console.WriteLine("Registros OrderDetail enviados: {0}", send_rows);
+                    ReSyncLocalData(OrderDetailTabAdpt, Row.SalesOrderID, deletion);
                 }
                 catch (DBConcurrencyException e)
                 {
-                    Console.WriteLine("ERROR de concurrencia.");
+                    Console.WriteLine("ERROR de concurrencia. Detalle: {0}", e.Message);
 
-                    switch (e.Row.RowState)
+                    Console.WriteLine("Marque X si desea resincronizar con BD: ");
+                    if (Console.ReadLine().ToLower() == "x")
                     {
-                        case DataRowState.Detached:
-                            break;
-                        case DataRowState.Unchanged:
-                            break;
-                        case DataRowState.Added:
-                            break;
-                        case DataRowState.Deleted:
-                            //Console.WriteLine("Intento de borrado en destino de registro que ya no existe. Resuelto");
-                            //Marcamos el borrado como cambio aceptado para que desaparezca del dataset
-                            //e.Row.AcceptChanges();
-                            //rows_OK = 1;
-                            break;
-                        case DataRowState.Modified:
-                            break;
-                        default:
-                            break;
-                    }
+                        ReSyncLocalData(OrderDetailTabAdpt, Row.SalesOrderID, deletion);
+                    };
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine("ERROR desconocido. Detalle: {0}", e.Message);
                 }
-
-                Console.WriteLine("Registros OrderDetail\n" +
-                                  "\tenviados: {0}\n" +
-                                  "\trecibidos {1}",
-                                  send_rows,
-                                  DetailReceived_rows);
-
-                Console.WriteLine("Registros OrderHeader\n" +
-                  "\tenviados: ---\n" +
-                  "\trecibidos {0}",
-                  HeaderReceived_rows);
             }
         }
+
+        private static void ReSyncLocalData(SalesOrderHeaderTableAdapter MainAdapter, int HeaderID, bool deletion)
+        {
+            int DetailReceived_rows = 0;
+            int HeaderReceived_rows = 0;
+            
+            HeaderReceived_rows = MainAdapter.FillBySalesOrderID(DataADO.SalesOrderHeader, HeaderID);
+            Console.WriteLine("Registros OrderHeader recibidos (resync): {0}", HeaderReceived_rows);
+
+            using (SalesOrderDetailTableAdapter SecondaryAdapter = new SalesOrderDetailTableAdapter())
+            {
+                DetailReceived_rows = deletion ? 
+                                      SecondaryAdapter.Fill(DataADO.SalesOrderDetail) :
+                                      SecondaryAdapter.FillBySalesOrderID(DataADO.SalesOrderDetail, HeaderID);
+            }
+
+            Console.WriteLine("Registros OrderDetail recibidos (resync): {0}", DetailReceived_rows);
+        }
+
+        private static void ReSyncLocalData(SalesOrderDetailTableAdapter MainAdapter, int HeaderID, bool deletion)
+        {
+            int DetailReceived_rows = 0;
+            int HeaderReceived_rows = 0;
+
+            HeaderReceived_rows = MainAdapter.FillBySalesOrderID(DataADO.SalesOrderDetail, HeaderID);
+            Console.WriteLine("Registros OrderHeader recibidos (resync): {0}", HeaderReceived_rows);
+
+            using (SalesOrderHeaderTableAdapter SecondaryAdapter = new SalesOrderHeaderTableAdapter())
+            {
+                DetailReceived_rows = deletion ?
+                                      SecondaryAdapter.Fill(DataADO.SalesOrderHeader) : 
+                                      SecondaryAdapter.FillBySalesOrderID(DataADO.SalesOrderHeader, HeaderID);
+            }
+
+            Console.WriteLine("Registros OrderHeader recibidos (resync): {0}", DetailReceived_rows);
+        }
+
+        private static void ReSyncLocalData(ADOM9Dataset.SalesOrderDetailRow Row) { }
 
         #endregion
 
@@ -268,7 +255,7 @@ namespace Modulo9
             int counter = 0;
             string prompt_input = "";
 
-            if (DataADO.Product.Rows == null)
+            if (DataADO.Product.Rows.Count == 0)
             {
                 using (ProductTableAdapter ProdTabAdpt = new ProductTableAdapter())
                 {
@@ -309,13 +296,15 @@ namespace Modulo9
             bool next_opt = true;
             int OrdHeaderID;
 
-            if (DataADO.SalesOrderHeader.Rows.Count == 0)
-            {
-                using (SalesOrderHeaderTableAdapter OrderHeadTabAdpt = new SalesOrderHeaderTableAdapter())
-                {
-                    OrderHeadTabAdpt.Fill(DataADO.SalesOrderHeader);
-                }
-            }
+            //Optimización, no hace falta traer todo. Lo integramos al preguntar
+
+            //if (DataADO.SalesOrderHeader.Rows.Count == 0)
+            //{
+            //    using (SalesOrderHeaderTableAdapter OrderHeadTabAdpt = new SalesOrderHeaderTableAdapter())
+            //    {
+            //        OrderHeadTabAdpt.Fill(DataADO.SalesOrderHeader);
+            //    }
+            //}
 
             OrdHeaderID = PickSalesOrderHeader();
 
@@ -436,13 +425,15 @@ namespace Modulo9
             ADOM9Dataset.SalesOrderDetailRow [] RelatedOrderDetails;
             ADOM9Dataset.SalesOrderHeaderRow HeaderRow;
 
-            if(DataADO.SalesOrderDetail.Rows.Count == 0)
-            {
-                using (SalesOrderDetailTableAdapter OrderDetailTabAdpt = new SalesOrderDetailTableAdapter())
-                {
-                    OrderDetailTabAdpt.Fill(DataADO.SalesOrderDetail);
-                }
-            }
+            //Optimización, no hace falta traer todo. Lo integramos al preguntar
+
+            //if(DataADO.SalesOrderDetail.Rows.Count == 0)
+            //{
+            //    using (SalesOrderDetailTableAdapter OrderDetailTabAdpt = new SalesOrderDetailTableAdapter())
+            //    {
+            //        OrderDetailTabAdpt.Fill(DataADO.SalesOrderDetail);
+            //    }
+            //}
 
             do
             {
@@ -451,8 +442,22 @@ namespace Modulo9
                 
                 Console.WriteLine("Información de detalle asociado a la cabecera escogida (ID {0} - Total acumulado {1})", OrdHeaderID, HeaderRow.TotalDue);
 
-                //Recuperamos todo el set de Order Details asociados para mostrar y seleccionar en métodos posteriores
+                //Recuperamos de BD los Order Details asociados y los buscamos a partir del Header para mostrar y seleccionar en métodos posteriores
+                //Siempre encontraremos, aunque un no esta de mas controlar excepción por fallo de conexión
                 //IMPORTANTE: Recalculamos a cada iteración puesto que se reinstancian los objetos al pasar por FILL...
+                try
+                { 
+                    using (SalesOrderDetailTableAdapter OrderDetailTblAdpt = new SalesOrderDetailTableAdapter())
+                    {
+                        OrderDetailTblAdpt.FillBySalesOrderID(DataADO.SalesOrderDetail, OrdHeaderID);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("ERROR recuperando OrderDetails del Header seleccionado. Detalles {0}", e.Message);
+                    return;
+                }
+
                 RelatedOrderDetails = HeaderRow.GetSalesOrderDetailRows();
 
                 foreach (ADOM9Dataset.SalesOrderDetailRow OrderDetailRow in RelatedOrderDetails)
