@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Modulo9.EF;
+using System.Data.Entity.Infrastructure;
 
 namespace Modulo9
 {
@@ -135,71 +136,65 @@ namespace Modulo9
             return OrdID;
         }
 
-        private static void SendSalesOrderHeader(EFM9Dataset.SalesOrderHeaderRow Row)
+        private static void SendSalesOrderHeader()
         {
             int send_rows = 0;
             //Calculamos porque una vez lancemos update perdemos visibilidad del cambio
             bool deletion = Row.RowState == DataRowState.Deleted;
 
             //Ambito de using grande por si debemos usar adaptEFr en concurrency exception
-            using (SalesOrderHeaderTableAdapter OrderHeadTabAdpt = new SalesOrderHeaderTableAdapter())
+            try
             {
-                try
-                {
-                    send_rows = OrderHeadTabAdpt.Update(Row);
-                    Console.WriteLine("Registros OrderHeader enviEFs: {0}", send_rows);
-                    ReSyncLocalData(OrderHeadTabAdpt, Row.SalesOrderID, deletion);
-                }
-                catch (DBConcurrencyException e)
-                {
-                    Console.WriteLine("ERROR de concurrencia. Detalle: {0}", e.Message);
+                send_rows = DataEF.SaveChanges();
+                Console.WriteLine("Registros OrderHeader enviados: {0}", send_rows);
+                ReSyncFromHeader(Row.SalesOrderID, deletion);
+            }
+            catch (DbUpdateConcurrencyException e)
+            {
+                Console.WriteLine("ERROR de concurrencia. Detalle: {0}", e.Message);
 
-                    Console.WriteLine("Marque X si desea resincronizar con BD: ");
-                    if (Console.ReadLine().ToLower() == "x")
-                    {
-                        ReSyncLocalData(OrderHeadTabAdpt, Row.SalesOrderID, deletion);
-                    };
-                }
-                catch (Exception e)
+                Console.WriteLine("Marque X si desea resincronizar con BD: ");
+                if (Console.ReadLine().ToLower() == "x")
                 {
-                    Console.WriteLine("ERROR desconocido. Detalle: {0}", e.Message);
-                }
+                    ReSyncFromHeader(Row.SalesOrderID, deletion);
+                };
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("ERROR desconocido. Detalle: {0}", e.Message);
             }
         }
 
-        private static void SendSalesOrderDetail(EFM9Dataset.SalesOrderDetailRow Row)
+        private static void SendSalesOrderDetail()
         {
             int send_rows = 0;
             //Calculamos porque una vez lancemos update perdemos visibilidad del cambio
             bool deletion = Row.RowState == DataRowState.Deleted;
 
             //Ambito de using grande por si debemos usar adaptEFr en concurrency exception
-            using (SalesOrderDetailTableAdapter OrderDetailTabAdpt = new SalesOrderDetailTableAdapter())
+            try
             {
-                try
-                {
-                    send_rows = OrderDetailTabAdpt.Update(Row);
-                    Console.WriteLine("Registros OrderDetail enviEFs: {0}", send_rows);
-                    ReSyncLocalData(OrderDetailTabAdpt, Row.SalesOrderID, deletion);
-                }
-                catch (DBConcurrencyException e)
-                {
-                    Console.WriteLine("ERROR de concurrencia. Detalle: {0}", e.Message);
+                send_rows = DataEF.SaveChanges();
+                Console.WriteLine("Registros OrderDetail enviEFs: {0}", send_rows);
+                ReSyncFromDetail(Row.SalesOrderID, deletion);
+            }
+            catch (DbUpdateConcurrencyException e)
+            {
+                Console.WriteLine("ERROR de concurrencia. Detalle: {0}", e.Message);
 
-                    Console.WriteLine("Marque X si desea resincronizar con BD: ");
-                    if (Console.ReadLine().ToLower() == "x")
-                    {
-                        ReSyncLocalData(OrderDetailTabAdpt, Row.SalesOrderID, deletion);
-                    };
-                }
-                catch (Exception e)
+                Console.WriteLine("Marque X si desea resincronizar con BD: ");
+                if (Console.ReadLine().ToLower() == "x")
                 {
-                    Console.WriteLine("ERROR desconocido. Detalle: {0}", e.Message);
-                }
+                    ReSyncFromDetail(Row.SalesOrderID, deletion);
+                };
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("ERROR desconocido. Detalle: {0}", e.Message);
             }
         }
 
-        private static void ReSyncLocalData(SalesOrderHeaderTableAdapter MainAdapter, int HeaderID, bool deletion)
+        private static void ReSyncFromHeader(int HeaderID, bool deletion)
         {
             int DetailReceived_rows = 0;
             int HeaderReceived_rows = 0;
@@ -217,7 +212,7 @@ namespace Modulo9
             Console.WriteLine("Registros OrderDetail recibidos (resync): {0}", DetailReceived_rows);
         }
 
-        private static void ReSyncLocalData(SalesOrderDetailTableAdapter MainAdapter, int HeaderID, bool deletion)
+        private static void ReSyncFromDetail(int HeaderID, bool deletion)
         {
             int DetailReceived_rows = 0;
             int HeaderReceived_rows = 0;
@@ -234,9 +229,6 @@ namespace Modulo9
 
             Console.WriteLine("Registros OrderHeader recibidos (resync): {0}", DetailReceived_rows);
         }
-
-        private static void ReSyncLocalData(EFM9Dataset.SalesOrderDetailRow Row) { }
-
         #endregion
 
         #region Product Methods
@@ -315,11 +307,59 @@ namespace Modulo9
             SalesOrderHeader Row = DataEF.SalesOrderHeaders.Find(OrdHeaderID);
 
             Console.WriteLine("Información completa de la cabecera escogida:");
-            
-            foreach (var item in DataEF)
-            {
-                Console.WriteLine("\t- {0}: {1} ", item.ColumnName, Row[item.ColumnName]);
-            }
+            Console.WriteLine("\t- AccountNumber: {0}" +
+                                "\t- AccountNumber: {0}" +
+                                "\t- BillToAddressID: {1}" +
+                                "\t- Comment: {2}" +
+                                "\t- CreditCardApprovalCode: {3}" +
+                                "\t- CreditCardID: {4}" +
+                                "\t- CurrencyRateID: {5}" +
+                                "\t- CustomerID: {6}" +
+                                "\t- DueDate: {7}" +
+                                "\t- Freight: {8}" +
+                                "\t- ModifiedDate: {9}" +
+                                "\t- OnlineOrderFlag: {10}" +
+                                "\t- OrderDate: {11}" +
+                                "\t- PurchaseOrderNumber: {12}" +
+                                "\t- RevisionNumber: {13}" +
+                                "\t- rowguid: {14}" +
+                                "\t- SalesOrderID: {15}" +
+                                "\t- SalesOrderNumber: {16}" +
+                                "\t- SalesPersonID: {17}" +
+                                "\t- ShipDate: {18}" +
+                                "\t- ShipMethodID: {19}" +
+                                "\t- ShipToAddressID: {20}" +
+                                "\t- Status: {21}" +
+                                "\t- SubTotal: {22}" +
+                                "\t- TaxAmt: {23}" +
+                                "\t- TerritoryID: {24}" +
+                                "\t- TotalDue: {25}",
+                                Row.AccountNumber,
+                                Row.BillToAddressID,
+                                Row.Comment,
+                                Row.CreditCardApprovalCode,
+                                Row.CreditCardID,
+                                Row.CurrencyRateID,
+                                Row.CustomerID,
+                                Row.DueDate,
+                                Row.Freight,
+                                Row.ModifiedDate,
+                                Row.OnlineOrderFlag,
+                                Row.OrderDate,
+                                Row.PurchaseOrderNumber,
+                                Row.RevisionNumber,
+                                Row.rowguid,
+                                Row.SalesOrderID,
+                                Row.SalesOrderNumber,
+                                Row.SalesPersonID,
+                                Row.ShipDate,
+                                Row.ShipMethodID,
+                                Row.ShipToAddressID,
+                                Row.Status,
+                                Row.SubTotal,
+                                Row.TaxAmt,
+                                Row.TerritoryID,
+                                Row.TotalDue);
 
             Console.WriteLine();
         }
@@ -382,8 +422,8 @@ namespace Modulo9
         private static void EFShowAndManageQuoteDetails(int OrdHeaderID)
         {
             bool next_opt = true;
-            EFM9Dataset.SalesOrderDetailRow[] RelatedOrderDetails;
-            EFM9Dataset.SalesOrderHeaderRow HeaderRow;
+            IEnumerable<SalesOrderDetail> RelatedOrderDetails;
+            SalesOrderHeader HeaderRow;
 
             do
             {
@@ -397,10 +437,7 @@ namespace Modulo9
                 //IMPORTANTE: Recalculamos a cada iteración puesto que se reinstancian los objetos al pasar por FILL...
                 try
                 {
-                    using (SalesOrderDetailTableAdapter OrderDetailTblAdpt = new SalesOrderDetailTableAdapter())
-                    {
-                        OrderDetailTblAdpt.FillBySalesOrderID(DataEF.SalesOrderDetail, OrdHeaderID);
-                    }
+                    RelatedOrderDetails = DataEF.SalesOrderDetails.Where(x => x.SalesOrderID == OrdHeaderID);
                 }
                 catch (Exception e)
                 {
@@ -408,9 +445,7 @@ namespace Modulo9
                     return;
                 }
 
-                RelatedOrderDetails = HeaderRow.GetSalesOrderDetailRows();
-
-                foreach (EFM9Dataset.SalesOrderDetailRow OrderDetailRow in RelatedOrderDetails)
+                foreach (SalesOrderDetail OrderDetailRow in RelatedOrderDetails)
                 {
                     Console.WriteLine("ID: {0}" +
                                       "\n\t- Producto: {1} " +
@@ -447,10 +482,9 @@ namespace Modulo9
             while (next_opt);
         }
 
-        private static void EFEditQuantityQuoteDetail(EFM9Dataset.SalesOrderDetailRow[] Rows)
+        private static void EFEditQuantityQuoteDetail(IEnumerable<SalesOrderDetail> Rows)
         {
-            EFM9Dataset.SalesOrderDetailRow Row;
-            //EFM9Dataset.SalesOrderHeaderRow HeaderRow;
+            SalesOrderDetail Row;
 
             int OrderDetailID = 0;
             short Quantity = 0;
@@ -464,35 +498,24 @@ namespace Modulo9
                 } while (!int.TryParse(Console.ReadLine(), out OrderDetailID));
 
                 Row = Rows.FirstOrDefault(x => x.SalesOrderDetailID == OrderDetailID);
-            } while (Row == default(EFM9Dataset.SalesOrderDetailRow));
+            } while (Row == default(SalesOrderDetail));
 
             do
             {
                 Console.Write("Nueva cantidad: ");
             } while (!short.TryParse(Console.ReadLine(), out Quantity));
 
-            Console.WriteLine("EstEF de fila al solicitar modificación: {0}", Row.RowState);
-
             //Quitamos precio total de linea actual de la cabecera, luego recalculamos detalle y añadimos el resultEF a cabecera
-            //Lo hace el trigger al editar detalle
-            //HeaderRow = DataEF.SalesOrderHeader.FindBySalesOrderID(Row.SalesOrderID);
-            //HeaderRow.SubTotal -= Row.LineTotal;
-
+            //Recordar que el trigger actualiza la cabecera
             Row.OrderQty = Quantity;
-            //Lo hace el trigger al editar detalle
-            //HeaderRow.SubTotal += Row.LineTotal;
-
+            
             //Actualizamos detalle, dispara trigger para padre y nos traemos padre
-            SendSalesOrderDetail(Row);
-            //SendSalesOrderHeader(HeaderRow);
-
-            Console.WriteLine("EstEF de fila al final de comando: {0}", Row.RowState);
+            SendSalesOrderDetail();
         }
 
         private static void EFEditUnitCostQuoteDetail(EFM9Dataset.SalesOrderDetailRow[] Rows)
         {
-            EFM9Dataset.SalesOrderDetailRow Row;
-            //EFM9Dataset.SalesOrderHeaderRow HeaderRow;
+            SalesOrderDetail Row;
             int OrderDetailID = 0;
             decimal UnitCost = 0;
 
@@ -505,31 +528,25 @@ namespace Modulo9
                 } while (!int.TryParse(Console.ReadLine(), out OrderDetailID));
 
                 Row = Rows.FirstOrDefault(x => x.SalesOrderDetailID == OrderDetailID);
-            } while (Row == default(EFM9Dataset.SalesOrderDetailRow));
+            } while (Row == default(SalesOrderDetail));
 
             do
             {
                 Console.Write("Nuevo precio unitario: ");
             } while (!decimal.TryParse(Console.ReadLine(), out UnitCost));
 
-            //Quitamos precio total de linea actual de la cabecera, luego recalculamos detalle y añadimos el resultEF a cabecera
-            //Lo hace el trigger de OrderDetail
-            //HeaderRow = DataEF.SalesOrderHeader.FindBySalesOrderID(Row.SalesOrderID);
-            //HeaderRow.SubTotal -= Row.LineTotal;
-
+            //Quitamos precio total de linea actual de la cabecera, luego recalculamos detalle y añadimos el resultado a cabecera
+            //Recordar que el trigger actualiza la cabecera
             Row.UnitPrice = UnitCost;
-            //Lo hace el trigger de OrderDetail
-            //HeaderRow.SubTotal += Row.LineTotal;
 
             //Actualizamos detalle, dispara trigger para padre y nos traemos padre
-            SendSalesOrderDetail(Row);
-            //SendSalesOrderHeader(HeaderRow);
+            SendSalesOrderDetail();
         }
 
-        private static void EFDeleteQuoteDetail(EFM9Dataset.SalesOrderDetailRow[] Rows)
+        private static void EFDeleteQuoteDetail(IEnumerable<SalesOrderDetail> Rows)
         {
-            EFM9Dataset.SalesOrderDetailRow Row;
-            EFM9Dataset.SalesOrderHeaderRow HeaderRow;
+            SalesOrderDetail Row;
+            SalesOrderHeader HeaderRow;
             int OrderDetailID = 0;
             int OrderHeaderID = 0;
             decimal LineTotalToSubstract = 0;
@@ -543,7 +560,7 @@ namespace Modulo9
                 } while (!int.TryParse(Console.ReadLine(), out OrderDetailID));
 
                 Row = Rows.FirstOrDefault(x => x.SalesOrderDetailID == OrderDetailID);
-            } while (Row == default(EFM9Dataset.SalesOrderDetailRow));
+            } while (Row == default(SalesOrderDetail));
 
             Console.Write("Confirme la eliminación del pedido escribiendo \"x\": ");
 
@@ -552,17 +569,18 @@ namespace Modulo9
                 //Realizamos consultas sobre valor y marcamos fila para eliminación (y automaticamente todo lo relacionEF con esta, debido a restricciones de tabla)
                 //Una vez marcEF para eliminación, no se puede usar el dato...
                 //NO lo hace el trigger de OrderDetail
-
                 LineTotalToSubstract = Row.LineTotal;
                 OrderHeaderID = Row.SalesOrderID;
-                Row.Delete();
+
+                DataEF.SalesOrderDetails.Remove(Row);
+                
                 //Actualizamos detalle pero no dispara trigger. Se trae header pero sin actualizar importes
-                SendSalesOrderDetail(Row);
+                SendSalesOrderDetail();
 
                 //Segunda operación con la corrección de totales
-                HeaderRow = DataEF.SalesOrderHeader.FindBySalesOrderID(OrderHeaderID);
+                HeaderRow = DataEF.SalesOrderHeaders.Find(OrderHeaderID);
                 HeaderRow.SubTotal -= LineTotalToSubstract;
-                SendSalesOrderHeader(HeaderRow);
+                SendSalesOrderHeader();
             }
         }
 
@@ -571,12 +589,10 @@ namespace Modulo9
             int ProdID = 0;
             short ProdQty = 0;
             decimal ProdPrice = 0M;
-            EFM9Dataset.SalesOrderDetailRow Row;
-            //EFM9Dataset.SalesOrderHeaderRow HeaderRow;
+            SalesOrderDetail Row;
 
             //Creamos fila vacía con configuraciones a partir de definición de tabla.
-            Row = DataEF.SalesOrderDetail.NewSalesOrderDetailRow();
-            //Console.WriteLine("EstEF de fila recien creada: {0}", Row.RowState);
+            Row = DataEF.SalesOrderDetails.Create();
 
             //Relacionamos el pedido y datos por defecto.
             Row.SalesOrderID = OrdHeaderID;
@@ -601,20 +617,10 @@ namespace Modulo9
             while (!int.TryParse(Console.ReadLine(), out ProdID));
             Row.ProductID = ProdID;
 
-            //Comprobación forzada de producto
-            if (DataEF.Product.Rows.Count == 0)
+            if (DataEF.Products.Find(ProdID) == null)
             {
-                using (ProductTableAdapter ProdTabAdpt = new ProductTableAdapter())
-                {
-                    ProdTabAdpt.Fill(DataEF.Product);
-
-                    if (DataEF.Product.FindByProductID(ProdID) == null)
-                    {
-                        Console.WriteLine("Producto no existe");
-                        Row.RejectChanges();
-                        return;
-                    }
-                }
+                Console.WriteLine("Producto no existe");
+                return;
             }
 
             do
@@ -631,32 +637,12 @@ namespace Modulo9
             while (!decimal.TryParse(Console.ReadLine(), out ProdPrice));
             Row.UnitPrice = ProdPrice;
 
-            Console.WriteLine("EstEF de fila antes de incluir: {0}", Row.RowState);
             //Añadimos la fila instanciada al dataset/tabla para poder disponer de esta tanto en local como en remoto
-            try
-            {
-                DataEF.SalesOrderDetail.AddSalesOrderDetailRow(Row);
-            }
-            catch (ConstraintException e)
-            {
-                Console.WriteLine("ERROR: Violación de restricción en comando Add. Detalle: {0}", e.Message);
-                return;
-            }
-            catch (NoNullAllowedException e)
-            {
-                Console.WriteLine("ERROR: No se admite valor nulo de campo en comando Add. Detalle: {0}", e.Message);
-                return;
-            }
-
-            Console.WriteLine("EstEF de fila recien atachada: {0}", Row.RowState);
+            DataEF.SalesOrderDetails.Add(Row);
+            
             //Recalculamos precio total de cabecera de pedido
             //Lo hace el trigger al editar detalle
-            //HeaderRow = DataEF.SalesOrderHeader.FindBySalesOrderID(OrdHeaderID);
-            //HeaderRow.SubTotal += ProdPrice * ProdQty;
-            //SendSalesOrderHeader(HeaderRow);
-            SendSalesOrderDetail(Row);
-
-            Console.WriteLine("EstEF de fila al final de comando: {0}", Row.RowState);
+            SendSalesOrderDetail();
         }
         #endregion
     }
