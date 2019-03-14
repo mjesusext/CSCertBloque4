@@ -101,8 +101,7 @@ namespace Modulo9
         private static int PickSalesOrderHeader()
         {
             int OrdID = -1;
-            int received_rows = 0;
-            EFM9Dataset.SalesOrderHeaderRow SelOrdHeader;
+            SalesOrderHeader SelOrdHeader = null;
 
             do
             {
@@ -111,10 +110,7 @@ namespace Modulo9
 
             try
             {
-                using (SalesOrderHeaderTableAdapter OrderHeaderTblAdpt = new SalesOrderHeaderTableAdapter())
-                {
-                    received_rows = OrderHeaderTblAdpt.FillBySalesOrderID(DataEF.SalesOrderHeader, OrdID);
-                }
+                SelOrdHeader = DataEF.SalesOrderHeaders.Find(OrdID);
             }
             catch (Exception e)
             {
@@ -122,10 +118,8 @@ namespace Modulo9
                 OrdID = -1;
             }
 
-            if (received_rows > 0)
+            if (SelOrdHeader != null)
             {
-                SelOrdHeader = DataEF.SalesOrderHeader.FindBySalesOrderID(OrdID);
-
                 Console.WriteLine("ID: {0} " +
                                     "\n\t- Fecha de pedido:  {1} " +
                                     "\n\t- Núm pedido: {2} " +
@@ -133,7 +127,7 @@ namespace Modulo9
                                     "\n\t- Importe total: {4} ",
                                     SelOrdHeader.SalesOrderID,
                                     SelOrdHeader.OrderDate,
-                                    SelOrdHeader.IsNull("PurchaseOrderNumber") ? "----" : SelOrdHeader.PurchaseOrderNumber,
+                                    SelOrdHeader.PurchaseOrderNumber ?? "----",
                                     SelOrdHeader.CustomerID,
                                     SelOrdHeader.TotalDue);
             }
@@ -251,20 +245,12 @@ namespace Modulo9
             int counter = 0;
             string prompt_input = "";
 
-            if (DataEF.Product.Rows.Count == 0)
-            {
-                using (ProductTableAdapter ProdTabAdpt = new ProductTableAdapter())
-                {
-                    ProdTabAdpt.Fill(DataEF.Product);
-                }
-            }
-
-            foreach (EFM9Dataset.ProductRow Producto in DataEF.Product.Rows)
+            foreach (Product Producto in DataEF.Products)
             {
                 Console.WriteLine("ID: {0} " +
                                     "- Nombre producto {1}",
                                     Producto.ProductID,
-                                    Producto.IsNull("Name") ? "----" : Producto.Name);
+                                    Producto.Name ?? "----");
                 counter++;
 
                 if (counter % 10 == 0)
@@ -290,16 +276,6 @@ namespace Modulo9
         {
             bool next_opt = true;
             int OrdHeaderID;
-
-            //Optimización, no hace falta traer todo. Lo integramos al preguntar
-
-            //if (DataEF.SalesOrderHeader.Rows.Count == 0)
-            //{
-            //    using (SalesOrderHeaderTableAdapter OrderHeadTabAdpt = new SalesOrderHeaderTableAdapter())
-            //    {
-            //        OrderHeadTabAdpt.Fill(DataEF.SalesOrderHeader);
-            //    }
-            //}
 
             OrdHeaderID = PickSalesOrderHeader();
 
@@ -336,11 +312,11 @@ namespace Modulo9
 
         private static void EFShowFullOrderHeader(int OrdHeaderID)
         {
-            EFM9Dataset.SalesOrderHeaderRow Row = DataEF.SalesOrderHeader.FindBySalesOrderID(OrdHeaderID);
+            SalesOrderHeader Row = DataEF.SalesOrderHeaders.Find(OrdHeaderID);
 
             Console.WriteLine("Información completa de la cabecera escogida:");
-
-            foreach (System.Data.DataColumn item in Row.Table.Columns)
+            
+            foreach (var item in DataEF)
             {
                 Console.WriteLine("\t- {0}: {1} ", item.ColumnName, Row[item.ColumnName]);
             }
@@ -353,15 +329,7 @@ namespace Modulo9
             int counter = 0;
             string prompt_input = "";
 
-            if (DataEF.SalesOrderHeader.Rows.Count == 0)
-            {
-                using (SalesOrderHeaderTableAdapter OrderHeadTabAdpt = new SalesOrderHeaderTableAdapter())
-                {
-                    OrderHeadTabAdpt.Fill(DataEF.SalesOrderHeader);
-                }
-            }
-
-            foreach (EFM9Dataset.SalesOrderHeaderRow OrderHeader in DataEF.SalesOrderHeader.Rows)
+            foreach (SalesOrderHeader OrderHeader in DataEF.SalesOrderHeaders)
             {
 
                 Console.WriteLine("ID: {0} " +
@@ -371,7 +339,7 @@ namespace Modulo9
                                     "\n\t- Importe total: {4} ",
                                     OrderHeader.SalesOrderID,
                                     OrderHeader.OrderDate,
-                                    OrderHeader.IsNull("PurchaseOrderNumber") ? "----" : OrderHeader.PurchaseOrderNumber,
+                                    OrderHeader.PurchaseOrderNumber ?? "----",
                                     OrderHeader.CustomerID,
                                     OrderHeader.TotalDue);
                 counter++;
@@ -395,7 +363,6 @@ namespace Modulo9
 
         private static void EFDeleteOrderHeader(int OrdHeaderID)
         {
-            EFM9Dataset.SalesOrderHeaderRow Row;
             Console.Write("Confirme la eliminación del pedido escribiendo \"x\": ");
 
             if (Console.ReadLine().ToLower() == "x")
@@ -405,10 +372,8 @@ namespace Modulo9
                 REFERENCES [Sales].[SalesOrderHeader] ([SalesOrderID])
                 ON DELETE CASCADE
                 GO*/
-
-                Row = DataEF.SalesOrderHeader.FindBySalesOrderID(OrdHeaderID);
-                Row.Delete();
-                SendSalesOrderHeader(Row);
+                DataEF.SalesOrderHeaders.Remove(DataEF.SalesOrderHeaders.Find(OrdHeaderID));
+                SendSalesOrderHeader();
             }
         }
         #endregion
@@ -420,22 +385,12 @@ namespace Modulo9
             EFM9Dataset.SalesOrderDetailRow[] RelatedOrderDetails;
             EFM9Dataset.SalesOrderHeaderRow HeaderRow;
 
-            //Optimización, no hace falta traer todo. Lo integramos al preguntar
-
-            //if(DataEF.SalesOrderDetail.Rows.Count == 0)
-            //{
-            //    using (SalesOrderDetailTableAdapter OrderDetailTabAdpt = new SalesOrderDetailTableAdapter())
-            //    {
-            //        OrderDetailTabAdpt.Fill(DataEF.SalesOrderDetail);
-            //    }
-            //}
-
             do
             {
                 //Recuperamos cabecera y mostramos información de sus detalles
-                HeaderRow = DataEF.SalesOrderHeader.FindBySalesOrderID(OrdHeaderID);
+                HeaderRow = DataEF.SalesOrderHeaders.Find(OrdHeaderID);
 
-                Console.WriteLine("Información de detalle asociEF a la cabecera escogida (ID {0} - Total acumulEF {1})", OrdHeaderID, HeaderRow.TotalDue);
+                Console.WriteLine("Información de detalle asociado a la cabecera escogida (ID {0} - Total acumulado {1})", OrdHeaderID, HeaderRow.TotalDue);
 
                 //Recuperamos de BD los Order Details asociEFs y los buscamos a partir del Header para mostrar y seleccionar en métodos posteriores
                 //Siempre encontraremos, aunque un no esta de mas controlar excepción por fallo de conexión
