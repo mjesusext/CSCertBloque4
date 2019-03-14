@@ -5,9 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Modulo9.ADO;
 using Modulo9.ADO.ADOM9DatasetTableAdapters;
-using System.Data.SqlClient;
 using System.Data;
-using System.Threading;
 
 namespace Modulo9
 {
@@ -499,7 +497,7 @@ namespace Modulo9
         private static void ADOEditQuantityQuoteDetail(ADOM9Dataset.SalesOrderDetailRow[] Rows)
         {
             ADOM9Dataset.SalesOrderDetailRow Row;
-            ADOM9Dataset.SalesOrderHeaderRow HeaderRow;
+            //ADOM9Dataset.SalesOrderHeaderRow HeaderRow;
 
             int OrderDetailID = 0;
             short Quantity = 0;
@@ -541,7 +539,7 @@ namespace Modulo9
         private static void ADOEditUnitCostQuoteDetail(ADOM9Dataset.SalesOrderDetailRow[] Rows)
         {
             ADOM9Dataset.SalesOrderDetailRow Row;
-            ADOM9Dataset.SalesOrderHeaderRow HeaderRow;
+            //ADOM9Dataset.SalesOrderHeaderRow HeaderRow;
             int OrderDetailID = 0;
             decimal UnitCost = 0;
 
@@ -621,7 +619,7 @@ namespace Modulo9
             short ProdQty = 0;
             decimal ProdPrice = 0M;
             ADOM9Dataset.SalesOrderDetailRow Row;
-            ADOM9Dataset.SalesOrderHeaderRow HeaderRow;
+            //ADOM9Dataset.SalesOrderHeaderRow HeaderRow;
 
             //Creamos fila vacía con configuraciones a partir de definición de tabla.
             Row = DataADO.SalesOrderDetail.NewSalesOrderDetailRow();

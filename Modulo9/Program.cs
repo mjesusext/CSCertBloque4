@@ -12,8 +12,8 @@ namespace Modulo9
         {
             //ID Pedido test 43667, productoID test 1
 
-            ADOVersionM9.Run();
-            //EFVersionM9.Run();
+            //ADOVersionM9.Run();
+            EFVersionM9.Run();
         }
 
     }
