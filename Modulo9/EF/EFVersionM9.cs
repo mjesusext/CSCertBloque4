@@ -106,7 +106,7 @@ namespace Modulo9
 
             do
             {
-                Console.Write("Introduzca identificEFr de Order Header: ");
+                Console.Write("Introduzca identificador de Order Header: ");
             } while (!int.TryParse(Console.ReadLine(), out OrdID));
 
             try
@@ -139,15 +139,13 @@ namespace Modulo9
         private static void SendSalesOrderHeader()
         {
             int send_rows = 0;
-            //Calculamos porque una vez lancemos update perdemos visibilidad del cambio
-            bool deletion = Row.RowState == DataRowState.Deleted;
 
             //Ambito de using grande por si debemos usar adaptEFr en concurrency exception
             try
             {
                 send_rows = DataEF.SaveChanges();
                 Console.WriteLine("Registros OrderHeader enviados: {0}", send_rows);
-                ReSyncFromHeader(Row.SalesOrderID, deletion);
+                ReSyncFromHeader();
             }
             catch (DbUpdateConcurrencyException e)
             {
@@ -156,7 +154,7 @@ namespace Modulo9
                 Console.WriteLine("Marque X si desea resincronizar con BD: ");
                 if (Console.ReadLine().ToLower() == "x")
                 {
-                    ReSyncFromHeader(Row.SalesOrderID, deletion);
+                    ReSyncFromHeader();
                 };
             }
             catch (Exception e)
@@ -168,15 +166,13 @@ namespace Modulo9
         private static void SendSalesOrderDetail()
         {
             int send_rows = 0;
-            //Calculamos porque una vez lancemos update perdemos visibilidad del cambio
-            bool deletion = Row.RowState == DataRowState.Deleted;
 
             //Ambito de using grande por si debemos usar adaptEFr en concurrency exception
             try
             {
                 send_rows = DataEF.SaveChanges();
                 Console.WriteLine("Registros OrderDetail enviEFs: {0}", send_rows);
-                ReSyncFromDetail(Row.SalesOrderID, deletion);
+                //ReSyncFromDetail();
             }
             catch (DbUpdateConcurrencyException e)
             {
@@ -185,7 +181,7 @@ namespace Modulo9
                 Console.WriteLine("Marque X si desea resincronizar con BD: ");
                 if (Console.ReadLine().ToLower() == "x")
                 {
-                    ReSyncFromDetail(Row.SalesOrderID, deletion);
+                    //ReSyncFromDetail();
                 };
             }
             catch (Exception e)
@@ -194,10 +190,13 @@ namespace Modulo9
             }
         }
 
+        
         private static void ReSyncFromHeader(int HeaderID, bool deletion)
         {
             int DetailReceived_rows = 0;
             int HeaderReceived_rows = 0;
+
+            //Tabla.Local --> version cacheada de datos
 
             HeaderReceived_rows = MainAdapter.FillBySalesOrderID(DataEF.SalesOrderHeader, HeaderID);
             Console.WriteLine("Registros OrderHeader recibidos (resync): {0}", HeaderReceived_rows);
@@ -211,7 +210,8 @@ namespace Modulo9
 
             Console.WriteLine("Registros OrderDetail recibidos (resync): {0}", DetailReceived_rows);
         }
-
+        
+        /*
         private static void ReSyncFromDetail(int HeaderID, bool deletion)
         {
             int DetailReceived_rows = 0;
@@ -229,6 +229,8 @@ namespace Modulo9
 
             Console.WriteLine("Registros OrderHeader recibidos (resync): {0}", DetailReceived_rows);
         }
+
+        */
         #endregion
 
         #region Product Methods
@@ -308,58 +310,58 @@ namespace Modulo9
 
             Console.WriteLine("Información completa de la cabecera escogida:");
             Console.WriteLine("\t- AccountNumber: {0}" +
-                                "\t- AccountNumber: {0}" +
-                                "\t- BillToAddressID: {1}" +
-                                "\t- Comment: {2}" +
-                                "\t- CreditCardApprovalCode: {3}" +
-                                "\t- CreditCardID: {4}" +
-                                "\t- CurrencyRateID: {5}" +
-                                "\t- CustomerID: {6}" +
-                                "\t- DueDate: {7}" +
-                                "\t- Freight: {8}" +
-                                "\t- ModifiedDate: {9}" +
-                                "\t- OnlineOrderFlag: {10}" +
-                                "\t- OrderDate: {11}" +
-                                "\t- PurchaseOrderNumber: {12}" +
-                                "\t- RevisionNumber: {13}" +
-                                "\t- rowguid: {14}" +
-                                "\t- SalesOrderID: {15}" +
-                                "\t- SalesOrderNumber: {16}" +
-                                "\t- SalesPersonID: {17}" +
-                                "\t- ShipDate: {18}" +
-                                "\t- ShipMethodID: {19}" +
-                                "\t- ShipToAddressID: {20}" +
-                                "\t- Status: {21}" +
-                                "\t- SubTotal: {22}" +
-                                "\t- TaxAmt: {23}" +
-                                "\t- TerritoryID: {24}" +
-                                "\t- TotalDue: {25}",
-                                Row.AccountNumber,
-                                Row.BillToAddressID,
-                                Row.Comment,
-                                Row.CreditCardApprovalCode,
-                                Row.CreditCardID,
-                                Row.CurrencyRateID,
-                                Row.CustomerID,
-                                Row.DueDate,
-                                Row.Freight,
-                                Row.ModifiedDate,
-                                Row.OnlineOrderFlag,
-                                Row.OrderDate,
-                                Row.PurchaseOrderNumber,
-                                Row.RevisionNumber,
-                                Row.rowguid,
-                                Row.SalesOrderID,
-                                Row.SalesOrderNumber,
-                                Row.SalesPersonID,
-                                Row.ShipDate,
-                                Row.ShipMethodID,
-                                Row.ShipToAddressID,
-                                Row.Status,
-                                Row.SubTotal,
-                                Row.TaxAmt,
-                                Row.TerritoryID,
-                                Row.TotalDue);
+                              "\n\t- AccountNumber: {0}" +
+                              "\n\t- BillToAddressID: {1}" +
+                              "\n\t- Comment: {2}" +
+                              "\n\t- CreditCardApprovalCode: {3}" +
+                              "\n\t- CreditCardID: {4}" +
+                              "\n\t- CurrencyRateID: {5}" +
+                              "\n\t- CustomerID: {6}" +
+                              "\n\t- DueDate: {7}" +
+                              "\n\t- Freight: {8}" +
+                              "\n\t- ModifiedDate: {9}" +
+                              "\n\t- OnlineOrderFlag: {10}" +
+                              "\n\t- OrderDate: {11}" +
+                              "\n\t- PurchaseOrderNumber: {12}" +
+                              "\n\t- RevisionNumber: {13}" +
+                              "\n\t- rowguid: {14}" +
+                              "\n\t- SalesOrderID: {15}" +
+                              "\n\t- SalesOrderNumber: {16}" +
+                              "\n\t- SalesPersonID: {17}" +
+                              "\n\t- ShipDate: {18}" +
+                              "\n\t- ShipMethodID: {19}" +
+                              "\n\t- ShipToAddressID: {20}" +
+                              "\n\t- Status: {21}" +
+                              "\n\t- SubTotal: {22}" +
+                              "\n\t- TaxAmt: {23}" +
+                              "\n\t- TerritoryID: {24}" +
+                              "\n\t- TotalDue: {25}",
+                              Row.AccountNumber,
+                              Row.BillToAddressID,
+                              Row.Comment,
+                              Row.CreditCardApprovalCode,
+                              Row.CreditCardID,
+                              Row.CurrencyRateID,
+                              Row.CustomerID,
+                              Row.DueDate,
+                              Row.Freight,
+                              Row.ModifiedDate,
+                              Row.OnlineOrderFlag,
+                              Row.OrderDate,
+                              Row.PurchaseOrderNumber,
+                              Row.RevisionNumber,
+                              Row.rowguid,
+                              Row.SalesOrderID,
+                              Row.SalesOrderNumber,
+                              Row.SalesPersonID,
+                              Row.ShipDate,
+                              Row.ShipMethodID,
+                              Row.ShipToAddressID,
+                              Row.Status,
+                              Row.SubTotal,
+                              Row.TaxAmt,
+                              Row.TerritoryID,
+                              Row.TotalDue);
 
             Console.WriteLine();
         }
@@ -513,7 +515,7 @@ namespace Modulo9
             SendSalesOrderDetail();
         }
 
-        private static void EFEditUnitCostQuoteDetail(EFM9Dataset.SalesOrderDetailRow[] Rows)
+        private static void EFEditUnitCostQuoteDetail(IEnumerable<SalesOrderDetail> Rows)
         {
             SalesOrderDetail Row;
             int OrderDetailID = 0;
