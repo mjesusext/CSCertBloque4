@@ -220,9 +220,14 @@ namespace Modulo9
         
         private static void ReSyncFromDetail(int DetailID, int HeaderID)
         {
-            DataEF.Entry(DataEF.SalesOrderDetails.Find(HeaderID, DetailID)).Reload();
-            Console.WriteLine("Registros OrderDetail resync");
-
+            SalesOrderDetail DetailRow = DataEF.SalesOrderDetails.Find(HeaderID, DetailID);
+            
+            if(DetailRow != null)
+            {
+                DataEF.Entry(DetailRow).Reload();
+                Console.WriteLine("Registros OrderDetail resync");
+            }
+            
             //No controlamos borrado, resincronizamos y el mismo machacará con nulos.
             DataEF.Entry(DataEF.SalesOrderHeaders.Find(HeaderID)).Reload();
 
