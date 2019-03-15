@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Modulo9.EF;
 using System.Data.Entity.Infrastructure;
+using System.Data.Entity;
 
 namespace Modulo9
 {
@@ -132,11 +133,16 @@ namespace Modulo9
                                     SelOrdHeader.CustomerID,
                                     SelOrdHeader.TotalDue);
             }
+            else
+            {
+                Console.WriteLine("OrderHeader solicitado no existe");
+                OrdID = -1;
+            }
 
             return OrdID;
         }
 
-        private static void SendSalesOrderHeader()
+        private static void SendSalesOrderHeader(int OrderHeaderID)
         {
             int send_rows = 0;
 
@@ -145,7 +151,7 @@ namespace Modulo9
             {
                 send_rows = DataEF.SaveChanges();
                 Console.WriteLine("Registros OrderHeader enviados: {0}", send_rows);
-                ReSyncFromHeader();
+                ReSyncFromHeader(OrderHeaderID);
             }
             catch (DbUpdateConcurrencyException e)
             {
@@ -154,7 +160,7 @@ namespace Modulo9
                 Console.WriteLine("Marque X si desea resincronizar con BD: ");
                 if (Console.ReadLine().ToLower() == "x")
                 {
-                    ReSyncFromHeader();
+                    ReSyncFromHeader(OrderHeaderID);
                 };
             }
             catch (Exception e)
@@ -163,16 +169,16 @@ namespace Modulo9
             }
         }
 
-        private static void SendSalesOrderDetail()
+        private static void SendSalesOrderDetail(int OrderDetailID, int OrderHeaderID)
         {
             int send_rows = 0;
-
+            
             //Ambito de using grande por si debemos usar adaptEFr en concurrency exception
             try
             {
                 send_rows = DataEF.SaveChanges();
-                Console.WriteLine("Registros OrderDetail enviEFs: {0}", send_rows);
-                //ReSyncFromDetail();
+                Console.WriteLine("Registros OrderDetail enviados: {0}", send_rows);
+                ReSyncFromDetail(OrderDetailID, OrderHeaderID);
             }
             catch (DbUpdateConcurrencyException e)
             {
@@ -181,7 +187,7 @@ namespace Modulo9
                 Console.WriteLine("Marque X si desea resincronizar con BD: ");
                 if (Console.ReadLine().ToLower() == "x")
                 {
-                    //ReSyncFromDetail();
+                    ReSyncFromDetail(OrderDetailID, OrderHeaderID);
                 };
             }
             catch (Exception e)
@@ -189,48 +195,39 @@ namespace Modulo9
                 Console.WriteLine("ERROR desconocido. Detalle: {0}", e.Message);
             }
         }
-
         
-        private static void ReSyncFromHeader(int HeaderID, bool deletion)
+        private static void ReSyncFromHeader(int HeaderID)
         {
-            int DetailReceived_rows = 0;
-            int HeaderReceived_rows = 0;
+            SalesOrderHeader HeaderRow = DataEF.SalesOrderHeaders.Find(HeaderID);
 
-            //Tabla.Local --> version cacheada de datos
-
-            HeaderReceived_rows = MainAdapter.FillBySalesOrderID(DataEF.SalesOrderHeader, HeaderID);
-            Console.WriteLine("Registros OrderHeader recibidos (resync): {0}", HeaderReceived_rows);
-
-            using (SalesOrderDetailTableAdapter SecondaryAdapter = new SalesOrderDetailTableAdapter())
+            //Si es nulo es que se ha eliminado. En local ya se detecta las restricción de eliminación y no hace falta resincronizar los hijos
+            if(HeaderRow != null)
             {
-                DetailReceived_rows = deletion ?
-                                      SecondaryAdapter.Fill(DataEF.SalesOrderDetail) :
-                                      SecondaryAdapter.FillBySalesOrderID(DataEF.SalesOrderDetail, HeaderID);
-            }
+                DataEF.Entry(HeaderRow).Reload();
+                Console.WriteLine("Registros OrderHeader resync");
 
-            Console.WriteLine("Registros OrderDetail recibidos (resync): {0}", DetailReceived_rows);
+                //No controlamos borrado, resincronizamos y el mismo machacará con nulos.
+
+                DataEF.Entry(HeaderRow)
+                    .Collection(x => x.SalesOrderDetails)
+                    .Query()
+                    .Where(x => x.SalesOrderID == HeaderID)
+                    .Load();
+
+                Console.WriteLine("Registros OrderDetail recibidos (resync)");
+            }
         }
         
-        /*
-        private static void ReSyncFromDetail(int HeaderID, bool deletion)
+        private static void ReSyncFromDetail(int DetailID, int HeaderID)
         {
-            int DetailReceived_rows = 0;
-            int HeaderReceived_rows = 0;
+            DataEF.Entry(DataEF.SalesOrderDetails.Find(HeaderID, DetailID)).Reload();
+            Console.WriteLine("Registros OrderDetail resync");
 
-            HeaderReceived_rows = MainAdapter.FillBySalesOrderID(DataEF.SalesOrderDetail, HeaderID);
-            Console.WriteLine("Registros OrderHeader recibidos (resync): {0}", HeaderReceived_rows);
+            //No controlamos borrado, resincronizamos y el mismo machacará con nulos.
+            DataEF.Entry(DataEF.SalesOrderHeaders.Find(HeaderID)).Reload();
 
-            using (SalesOrderHeaderTableAdapter SecondaryAdapter = new SalesOrderHeaderTableAdapter())
-            {
-                DetailReceived_rows = deletion ?
-                                      SecondaryAdapter.Fill(DataEF.SalesOrderHeader) :
-                                      SecondaryAdapter.FillBySalesOrderID(DataEF.SalesOrderHeader, HeaderID);
-            }
-
-            Console.WriteLine("Registros OrderHeader recibidos (resync): {0}", DetailReceived_rows);
+            Console.WriteLine("Registros OrderHeader recibidos (resync)");
         }
-
-        */
         #endregion
 
         #region Product Methods
@@ -415,7 +412,7 @@ namespace Modulo9
                 ON DELETE CASCADE
                 GO*/
                 DataEF.SalesOrderHeaders.Remove(DataEF.SalesOrderHeaders.Find(OrdHeaderID));
-                SendSalesOrderHeader();
+                SendSalesOrderHeader(OrdHeaderID);
             }
         }
         #endregion
@@ -489,6 +486,7 @@ namespace Modulo9
             SalesOrderDetail Row;
 
             int OrderDetailID = 0;
+            int OrderHeaderID = 0;
             short Quantity = 0;
 
             //Indicar ID de quote detail a procesar
@@ -507,18 +505,20 @@ namespace Modulo9
                 Console.Write("Nueva cantidad: ");
             } while (!short.TryParse(Console.ReadLine(), out Quantity));
 
+            OrderHeaderID = Row.SalesOrderID;
             //Quitamos precio total de linea actual de la cabecera, luego recalculamos detalle y añadimos el resultEF a cabecera
             //Recordar que el trigger actualiza la cabecera
             Row.OrderQty = Quantity;
             
             //Actualizamos detalle, dispara trigger para padre y nos traemos padre
-            SendSalesOrderDetail();
+            SendSalesOrderDetail(OrderDetailID, OrderHeaderID);
         }
 
         private static void EFEditUnitCostQuoteDetail(IEnumerable<SalesOrderDetail> Rows)
         {
             SalesOrderDetail Row;
             int OrderDetailID = 0;
+            int OrderHeaderID = 0;
             decimal UnitCost = 0;
 
             //Indicar ID de quote detail a procesar
@@ -537,12 +537,13 @@ namespace Modulo9
                 Console.Write("Nuevo precio unitario: ");
             } while (!decimal.TryParse(Console.ReadLine(), out UnitCost));
 
+            OrderHeaderID = Row.SalesOrderID;
             //Quitamos precio total de linea actual de la cabecera, luego recalculamos detalle y añadimos el resultado a cabecera
             //Recordar que el trigger actualiza la cabecera
             Row.UnitPrice = UnitCost;
 
             //Actualizamos detalle, dispara trigger para padre y nos traemos padre
-            SendSalesOrderDetail();
+            SendSalesOrderDetail(OrderDetailID, OrderHeaderID);
         }
 
         private static void EFDeleteQuoteDetail(IEnumerable<SalesOrderDetail> Rows)
@@ -577,12 +578,12 @@ namespace Modulo9
                 DataEF.SalesOrderDetails.Remove(Row);
                 
                 //Actualizamos detalle pero no dispara trigger. Se trae header pero sin actualizar importes
-                SendSalesOrderDetail();
+                SendSalesOrderDetail(OrderDetailID, OrderHeaderID);
 
                 //Segunda operación con la corrección de totales
                 HeaderRow = DataEF.SalesOrderHeaders.Find(OrderHeaderID);
                 HeaderRow.SubTotal -= LineTotalToSubstract;
-                SendSalesOrderHeader();
+                SendSalesOrderHeader(OrderHeaderID);
             }
         }
 
@@ -644,7 +645,7 @@ namespace Modulo9
             
             //Recalculamos precio total de cabecera de pedido
             //Lo hace el trigger al editar detalle
-            SendSalesOrderDetail();
+            SendSalesOrderDetail(OrdHeaderID, OrdHeaderID);
         }
         #endregion
     }
