@@ -187,8 +187,10 @@ namespace Modulo10
             Parallel.ForEach(
                 valores, 
                 async (x) => {
-                    await Task.Delay(5000);
+                    //Peor versión para retrasar mas y ver efectos
+                    //await Task.Delay(1000);
                     Console.WriteLine("Thread ID: {0}. {1}", Thread.CurrentThread.ManagedThreadId, x);
+                    await Task.Delay(1000);
                 }
             );
         }
