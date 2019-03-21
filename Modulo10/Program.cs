@@ -13,7 +13,8 @@ namespace Modulo10
         {
             //MainV1();
             //MainV2();
-            MainV3();
+            //MainV3();
+            MainV4();
 
             Console.ReadLine();
         }
@@ -40,8 +41,22 @@ namespace Modulo10
         private static async void MainV3()
         {
             Task<string> valor_V3 = Metodo1_V3();
+            //Esperamos a final de ejecución
             //await Metodo2_V3();
+            //Continuamos ejecución escribiendo valor_V3 en cuanto lo tengamos. Mientras que se lance async los mensjaes dentro de Metodo2_V3()
             Metodo2_V3();
+
+            Console.WriteLine("Thread ID: {0}. Valor de método 1: {1}", Thread.CurrentThread.ManagedThreadId, await valor_V3);
+            Console.ReadLine();
+        }
+
+        private static async void MainV4()
+        {
+            Task<string> valor_V3 = Metodo1_V3();
+            //Esperamos a final de ejecución
+            //await Metodo2_V3();
+            //Continuamos ejecución escribiendo valor_V3 en cuanto lo tengamos. Mientras que se lance async los mensjaes dentro de Metodo2_V3()
+            Metodo2_V4();
 
             Console.WriteLine("Thread ID: {0}. Valor de método 1: {1}", Thread.CurrentThread.ManagedThreadId, await valor_V3);
             Console.ReadLine();
@@ -149,6 +164,33 @@ namespace Modulo10
                 Console.WriteLine("Thread ID: {0}. {1}", Thread.CurrentThread.ManagedThreadId, valor);
                 await Task.Delay(1000);
             }
+        }
+        #endregion
+
+        #region Métodos V4
+        private static async Task Metodo2_V4()
+        {
+            string[] valores =
+            {
+                "Método 2 - Valor 1",
+                "Método 2 - Valor 2",
+                "Método 2 - Valor 3",
+                "Método 2 - Valor 4",
+                "Método 2 - Valor 5",
+                "Método 2 - Valor 6",
+                "Método 2 - Valor 7",
+                "Método 2 - Valor 8",
+                "Método 2 - Valor 9",
+                "Método 2 - Valor 10"
+            };
+
+            Parallel.ForEach(
+                valores, 
+                async (x) => {
+                    await Task.Delay(5000);
+                    Console.WriteLine("Thread ID: {0}. {1}", Thread.CurrentThread.ManagedThreadId, x);
+                }
+            );
         }
         #endregion
     }
