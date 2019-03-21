@@ -149,10 +149,10 @@
           <Property Name="SalesOrderID" Type="Int32" Nullable="false" />
           <Property Name="SalesOrderDetailID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
           <Property Name="CarrierTrackingNumber" Type="String" MaxLength="25" FixedLength="false" Unicode="true" />
-          <Property Name="OrderQty" Type="Int16" Nullable="false" />
+          <Property Name="OrderQty" Type="Int16" Nullable="false" ConcurrencyMode="Fixed" />
           <Property Name="ProductID" Type="Int32" Nullable="false" />
           <Property Name="SpecialOfferID" Type="Int32" Nullable="false" />
-          <Property Name="UnitPrice" Type="Decimal" Precision="19" Scale="4" Nullable="false" />
+          <Property Name="UnitPrice" Type="Decimal" Precision="19" Scale="4" Nullable="false" ConcurrencyMode="Fixed" />
           <Property Name="UnitPriceDiscount" Type="Decimal" Precision="19" Scale="4" Nullable="false" />
           <Property Name="LineTotal" Type="Decimal" Precision="38" Scale="6" Nullable="false" annotation:StoreGeneratedPattern="Computed" />
           <Property Name="rowguid" Type="Guid" Nullable="false" />
@@ -185,7 +185,7 @@
           <Property Name="SubTotal" Type="Decimal" Precision="19" Scale="4" Nullable="false" />
           <Property Name="TaxAmt" Type="Decimal" Precision="19" Scale="4" Nullable="false" />
           <Property Name="Freight" Type="Decimal" Precision="19" Scale="4" Nullable="false" />
-          <Property Name="TotalDue" Type="Decimal" Precision="19" Scale="4" Nullable="false" annotation:StoreGeneratedPattern="Computed" />
+          <Property Name="TotalDue" Type="Decimal" Precision="19" Scale="4" Nullable="false" annotation:StoreGeneratedPattern="Computed" ConcurrencyMode="Fixed" />
           <Property Name="Comment" Type="String" MaxLength="128" FixedLength="false" Unicode="true" />
           <Property Name="rowguid" Type="Guid" Nullable="false" />
           <Property Name="ModifiedDate" Type="DateTime" Nullable="false" Precision="3" />

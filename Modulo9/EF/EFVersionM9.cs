@@ -155,6 +155,7 @@ namespace Modulo9
             }
             catch (DbUpdateConcurrencyException e)
             {
+                //La excepción no se lanza si en el archivo .EDMX no seteamos un campo de tabla con la propiedad del asistente "Concurrency mode = FIXED"
                 Console.WriteLine("ERROR de concurrencia. Detalle: {0}", e.Message);
 
                 Console.WriteLine("Marque X si desea resincronizar con BD: ");
@@ -182,6 +183,7 @@ namespace Modulo9
             }
             catch (DbUpdateConcurrencyException e)
             {
+                //La excepción no se lanza si en el archivo .EDMX no seteamos un campo de tabla con la propiedad del asistente "Concurrency mode = FIXED"
                 Console.WriteLine("ERROR de concurrencia. Detalle: {0}", e.Message);
 
                 Console.WriteLine("Marque X si desea resincronizar con BD: ");
