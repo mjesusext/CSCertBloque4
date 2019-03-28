@@ -94,6 +94,32 @@ namespace Modulo11
 
         private static void ReadFileFromPrompt()
         {
+            string fileName;
+            string filePath;
+            FileStream fs;
+            byte[] textBytes = new byte[] { };
+
+            Console.Write("Introduzca nombre de fichero: ");
+            fileName = Console.ReadLine();
+
+            Console.Write("Introduzca ruta: ");
+            filePath = Console.ReadLine();
+
+            try
+            {
+                using (fs = new FileStream(filePath + "\\" + fileName + ".txt", FileMode.Open, FileAccess.Read))
+                {
+                    fs.Read(textBytes, 0, (int)fs.Length);
+                    Console.Write(textBytes);
+                }
+
+                Console.WriteLine("");
+            }
+            catch
+            {
+                Console.WriteLine("Error creando fichero (o abriendo si existe). Retorno al menu");
+                return;
+            }
 
         }
     }
