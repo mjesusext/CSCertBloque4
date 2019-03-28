@@ -74,9 +74,9 @@ namespace Modulo11
                     {
                         textRow = Encoding.Unicode.GetBytes((Console.ReadLine() + "\r\n"));
                         
-                        if (textRow.SequenceEqual(exitCommand))
+                        if (!textRow.SequenceEqual(exitCommand))
                         {
-                            fs.Write(textRow, 0, textRow.Length - 1);
+                            fs.Write(textRow, 0, textRow.Length);
                         }
                         else
                         {
