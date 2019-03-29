@@ -85,9 +85,9 @@ namespace Modulo11
                     }
                 }
             }
-            catch
+            catch(Exception e)
             {
-                Console.WriteLine("Error creando fichero (o abriendo si existe). Retorno al menu");
+                Console.WriteLine("Error creando fichero (o abriendo si existe). Retorno al menu. Detalle error: {0}", e.Message);
                 return;
             }
         }
@@ -97,7 +97,7 @@ namespace Modulo11
             string fileName;
             string filePath;
             FileStream fs;
-            byte[] textBytes = new byte[] { };
+            byte[] textBytes;
 
             Console.Write("Introduzca nombre de fichero: ");
             fileName = Console.ReadLine();
@@ -109,15 +109,18 @@ namespace Modulo11
             {
                 using (fs = new FileStream(filePath + "\\" + fileName + ".txt", FileMode.Open, FileAccess.Read))
                 {
-                    fs.Read(textBytes, 0, (int)fs.Length);
-                    Console.Write(textBytes);
+                    //Hay que pasar el array de bytes dimensionado al método de lectura para que vuelque. No lo instancia internamente
+                    textBytes = new byte[(int)fs.Length];
+
+                    fs.Read(textBytes, 0, (int)fs.Length - 1);
+                    Console.Write(Encoding.Unicode.GetString(textBytes));
                 }
 
                 Console.WriteLine("");
             }
-            catch
+            catch(Exception e)
             {
-                Console.WriteLine("Error creando fichero (o abriendo si existe). Retorno al menu");
+                Console.WriteLine("Error creando fichero (o abriendo si existe). Retorno al menu. Detalle error: {0}", e.Message);
                 return;
             }
 
