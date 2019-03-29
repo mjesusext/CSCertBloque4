@@ -195,15 +195,5 @@ namespace Modulo11
                 return;
             }
         }
-
-        private static void WriteFileFromPromptV3()
-        {
-            //StringWriter
-        }
-
-        private static void ReadFileFromPromptV3()
-        {
-            //StringReader
-        }
     }
 }
