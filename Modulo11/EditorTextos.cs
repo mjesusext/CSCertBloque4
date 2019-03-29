@@ -27,10 +27,12 @@ namespace Modulo11
                 switch (opCode)
                 {
                     case 1:
-                        WriteFileFromPrompt();
+                        //WriteFileFromPromptV1();
+                        WriteFileFromPromptV2();
                         break;
                     case 2:
-                        ReadFileFromPrompt();
+                        //ReadFileFromPromptV1();
+                        ReadFileFromPromptV2();
                         break;
                     case 3:
                         nextOp = false;
@@ -51,7 +53,7 @@ namespace Modulo11
                               "3) Finalizar\n");
         }
 
-        private static void WriteFileFromPrompt()
+        private static void WriteFileFromPromptV1()
         {
             string fileName;
             string filePath;
@@ -92,7 +94,7 @@ namespace Modulo11
             }
         }
 
-        private static void ReadFileFromPrompt()
+        private static void ReadFileFromPromptV1()
         {
             string fileName;
             string filePath;
@@ -124,6 +126,26 @@ namespace Modulo11
                 return;
             }
 
+        }
+
+        private static void WriteFileFromPromptV2()
+        {
+            //StreamWriter
+        }
+
+        private static void ReadFileFromPromptV2()
+        {
+            //StreamReader
+        }
+
+        private static void WriteFileFromPromptV3()
+        {
+            //StringWriter
+        }
+
+        private static void ReadFileFromPromptV3()
+        {
+            //StringReader
         }
     }
 }
