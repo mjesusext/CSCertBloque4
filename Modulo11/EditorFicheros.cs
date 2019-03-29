@@ -7,12 +7,24 @@ using System.IO;
 
 namespace Modulo11
 {
-    public static class EditorTextos
+    public static class EditorFicheros
     {
+        enum OpcionEditorTextos
+        {
+            None = 0,
+            WriteFile = 1,
+            ReadFile = 2,
+            MoveFileOrDir = 3,
+            CopyFileOrDir = 4,
+            RenameFileOrDir = 5,
+            DeleteFileOrDir = 6,
+            Close = 7
+        };
+
         public static void Run()
         {
             bool nextOp = true;
-            int opCode = -1;
+            OpcionEditorTextos opChoice = OpcionEditorTextos.None;
             Console.WriteLine("----- Editor de textos -----");
 
             do
@@ -22,23 +34,35 @@ namespace Modulo11
                 {
                     Console.Write("Introduzca un número: ");
                 }
-                while (!int.TryParse(Console.ReadLine(), out opCode));
-                
-                switch (opCode)
+                while (!Enum.TryParse(Console.ReadLine(), out opChoice));
+
+                switch (opChoice)
                 {
-                    case 1:
+                    case OpcionEditorTextos.WriteFile:
                         //WriteFileFromPromptV1();
                         WriteFileFromPromptV2();
                         break;
-                    case 2:
+                    case OpcionEditorTextos.ReadFile:
                         //ReadFileFromPromptV1();
                         ReadFileFromPromptV2();
                         break;
-                    case 3:
+                    case OpcionEditorTextos.MoveFileOrDir:
+                        MoveFileOrDirectory();
+                        break;
+                    case OpcionEditorTextos.CopyFileOrDir:
+                        CopyFileOrDirectory();
+                        break;
+                    case OpcionEditorTextos.RenameFileOrDir:
+                        RenameFileOrDirectory();
+                        break;
+                    case OpcionEditorTextos.DeleteFileOrDir:
+                        DeleteFileOrDirectory();
+                        break;
+                    case OpcionEditorTextos.Close:
                         nextOp = false;
                         break;
+                    case OpcionEditorTextos.None:
                     default:
-                        opCode = -1;
                         break;
                 }
 
@@ -50,9 +74,14 @@ namespace Modulo11
             Console.WriteLine("Seleccione una opción:");
             Console.WriteLine("1) Crear fichero texto\n" +
                               "2) Leer fichero texto\n" +
-                              "3) Finalizar\n");
+                              "3) Mover fichero o directorio\n" +
+                              "4) Copiar fichero o directorio\n" +
+                              "5) Renombrar fichero o directorio\n" +
+                              "6) Borrar fichero o directorio\n" +
+                              "7) Finalizar\n");
         }
 
+        #region Write / Read text files
         private static void WriteFileFromPromptV1()
         {
             string fileName;
@@ -75,7 +104,7 @@ namespace Modulo11
                     while (nextRow)
                     {
                         textRow = Encoding.Unicode.GetBytes((Console.ReadLine() + "\r\n"));
-                        
+
                         if (!textRow.SequenceEqual(exitCommand))
                         {
                             fs.Write(textRow, 0, textRow.Length);
@@ -87,7 +116,7 @@ namespace Modulo11
                     }
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Console.WriteLine("Error creando fichero (o abriendo si existe). Retorno al menu. Detalle error: {0}", e.Message);
                 return;
@@ -120,7 +149,7 @@ namespace Modulo11
 
                 Console.WriteLine("");
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Console.WriteLine("Error creando fichero (o abriendo si existe). Retorno al menu. Detalle error: {0}", e.Message);
                 return;
@@ -182,7 +211,7 @@ namespace Modulo11
 
             try
             {
-                using (sr = new StreamReader(filePath + "\\" + fileName + ".txt", Encoding.Unicode)) 
+                using (sr = new StreamReader(filePath + "\\" + fileName + ".txt", Encoding.Unicode))
                 {
                     Console.Write(sr.ReadToEnd());
                 }
@@ -195,5 +224,38 @@ namespace Modulo11
                 return;
             }
         }
+        #endregion
+
+        #region Move/Copy/Rename/Delete files
+        private static void MoveFileOrDirectory()
+        {
+            //Pedir fichero o directorio a mover
+            //Ruta de destino
+            //Validar si origen y dest OK
+            //Si es directorio, actuar sobre este y todo su contenido
+        }
+
+        private static void CopyFileOrDirectory()
+        {
+            //Pedir fichero o directorio a copiar
+            //Ruta de destino
+            //Validar si origen y dest OK
+            //Si es directorio, actuar sobre este y todo su contenido
+        }
+
+        private static void RenameFileOrDirectory()
+        {
+            //Pedir fichero o directorio a renombrar
+            //Pedir nuevo nombre
+            //Actuar
+        }
+
+        private static void DeleteFileOrDirectory()
+        {
+            //Pedir fichero o directorio a borrar
+            //Pedir confirmación
+            //Borrar este y sus contenidos anidados en caso de directorios
+        }
+        #endregion
     }
 }

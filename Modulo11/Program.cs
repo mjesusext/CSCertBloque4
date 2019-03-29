@@ -10,7 +10,7 @@ namespace Modulo11
     {
         static void Main(string[] args)
         {
-            EditorTextos.Run();
+            EditorFicheros.Run();
         }
     }
 }
