@@ -125,17 +125,75 @@ namespace Modulo11
                 Console.WriteLine("Error creando fichero (o abriendo si existe). Retorno al menu. Detalle error: {0}", e.Message);
                 return;
             }
-
         }
 
         private static void WriteFileFromPromptV2()
         {
-            //StreamWriter
+            string fileName;
+            string filePath;
+            StreamWriter sr;
+            string exitCommand = "EXIT";
+            string textRow = string.Empty;
+            bool nextRow = true;
+
+            Console.Write("Introduzca nombre de fichero: ");
+            fileName = Console.ReadLine();
+
+            Console.Write("Introduzca ruta: ");
+            filePath = Console.ReadLine();
+
+            try
+            {
+                using (sr = new StreamWriter(filePath + "\\" + fileName + ".txt", false, Encoding.Unicode)) //(filePath + "\\" + fileName + ".txt", FileMode.Append, FileAccess.Write))
+                {
+                    while (nextRow)
+                    {
+                        textRow = Console.ReadLine();
+
+                        if (textRow != exitCommand)
+                        {
+                            sr.WriteLine(textRow);
+                        }
+                        else
+                        {
+                            nextRow = false;
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error creando fichero (o abriendo si existe). Retorno al menu. Detalle error: {0}", e.Message);
+                return;
+            }
         }
 
         private static void ReadFileFromPromptV2()
         {
-            //StreamReader
+            string fileName;
+            string filePath;
+            StreamReader sr;
+
+            Console.Write("Introduzca nombre de fichero: ");
+            fileName = Console.ReadLine();
+
+            Console.Write("Introduzca ruta: ");
+            filePath = Console.ReadLine();
+
+            try
+            {
+                using (sr = new StreamReader(filePath + "\\" + fileName + ".txt", Encoding.Unicode)) 
+                {
+                    Console.Write(sr.ReadToEnd());
+                }
+
+                Console.WriteLine("");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error creando fichero (o abriendo si existe). Retorno al menu. Detalle error: {0}", e.Message);
+                return;
+            }
         }
 
         private static void WriteFileFromPromptV3()
