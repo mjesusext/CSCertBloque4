@@ -9,7 +9,7 @@ namespace Modulo11
 {
     public static class EditorFicheros
     {
-        private enum OpcionEditorTextos
+        private enum OpcionEditorFicheros
         {
             None = 0,
             WriteFile = 1,
@@ -24,7 +24,7 @@ namespace Modulo11
         public static void Run()
         {
             bool nextOp = true;
-            OpcionEditorTextos opChoice = OpcionEditorTextos.None;
+            OpcionEditorFicheros opChoice = OpcionEditorFicheros.None;
             Console.WriteLine("----- Editor de textos -----");
 
             do
@@ -38,30 +38,30 @@ namespace Modulo11
 
                 switch (opChoice)
                 {
-                    case OpcionEditorTextos.WriteFile:
+                    case OpcionEditorFicheros.WriteFile:
                         //WriteFileFromPromptV1();
                         WriteFileFromPromptV2();
                         break;
-                    case OpcionEditorTextos.ReadFile:
+                    case OpcionEditorFicheros.ReadFile:
                         //ReadFileFromPromptV1();
                         ReadFileFromPromptV2();
                         break;
-                    case OpcionEditorTextos.MoveFileOrDir:
+                    case OpcionEditorFicheros.MoveFileOrDir:
                         MoveFileOrDirectory();
                         break;
-                    case OpcionEditorTextos.CopyFileOrDir:
+                    case OpcionEditorFicheros.CopyFileOrDir:
                         CopyFileOrDirectory();
                         break;
-                    case OpcionEditorTextos.RenameFileOrDir:
+                    case OpcionEditorFicheros.RenameFileOrDir:
                         RenameFileOrDirectory();
                         break;
-                    case OpcionEditorTextos.DeleteFileOrDir:
+                    case OpcionEditorFicheros.DeleteFileOrDir:
                         DeleteFileOrDirectory();
                         break;
-                    case OpcionEditorTextos.Close:
+                    case OpcionEditorFicheros.Close:
                         nextOp = false;
                         break;
-                    case OpcionEditorTextos.None:
+                    case OpcionEditorFicheros.None:
                     default:
                         break;
                 }
