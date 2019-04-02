@@ -229,6 +229,11 @@ namespace Modulo11
         #region Move/Copy/Rename/Delete files
         private static void MoveFileOrDirectory()
         {
+            //Se podria hacer con las clases estáticas, pero se debe manipular la ruta desde el mismo string para que el destino lo cree con el mismo nombre.
+            //Desde las clases instanciadas, podemos recuperar como propiedad el nombre para mantenerlo (tanto en fichero como directorio)
+            DirectoryInfo OrigDir = null;
+            FileInfo OrigFile = null;
+
             string origPath, destPath;
             bool origFileOK = false;
             bool origDirOK = false;
@@ -248,12 +253,13 @@ namespace Modulo11
             //Validamos que origen y destino sean coherentes antes de continuar
             if (origDirOK && destOK)
             {
-                DirectoryInfo a = new DirectoryInfo(destPath);
-                //a.MoveTo()
-                Directory.Move(origPath, destPath);
+                OrigDir = new DirectoryInfo(origPath);
+                OrigDir.MoveTo(destPath + "\\" + OrigDir.Name);
             }
             else if(origFileOK && destOK)
             {
+                OrigFile = new FileInfo(origPath);
+                OrigFile.MoveTo(destPath + "\\" + OrigFile.Name);
             }
             else
             {
