@@ -229,17 +229,16 @@ namespace Modulo11
         #region Move/Copy/Rename/Delete files
         private static void MoveFileOrDirectory()
         {
-            //Validar si origen y dest OK
-            //Si es directorio, actuar sobre este y todo su contenido
-
             string origPath, destPath;
-            bool origOK = false;
+            bool origFileOK = false;
+            bool origDirOK = false;
             bool destOK = false;
 
             Console.Write("Introduzca nombre de fichero o directorio: ");
             origPath = Console.ReadLine();
 
-            origOK = File.Exists(origPath) || Directory.Exists(origPath);
+            origFileOK = File.Exists(origPath);
+            origDirOK = Directory.Exists(origPath);
 
             Console.Write("Introduzca directorio de destino: ");
             destPath = Console.ReadLine();
@@ -247,9 +246,14 @@ namespace Modulo11
             destOK = Directory.Exists(destPath);
 
             //Validamos que origen y destino sean coherentes antes de continuar
-            if (origOK && destOK)
+            if (origDirOK && destOK)
             {
+                DirectoryInfo a = new DirectoryInfo(destPath);
+                //a.MoveTo()
                 Directory.Move(origPath, destPath);
+            }
+            else if(origFileOK && destOK)
+            {
             }
             else
             {
