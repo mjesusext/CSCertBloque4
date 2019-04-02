@@ -11,7 +11,8 @@ namespace Modulo11
         static void Main(string[] args)
         {
             //EditorFicheros.Run();
-            SerializadorAlumnos.Run();
+            //SerializadorAlumnos.Run();
+            CargadorCodigo.Run();
         }
     }
 }
