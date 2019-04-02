@@ -306,9 +306,9 @@ namespace Modulo11
 
                 while (DrillDown)
                 {
-                    DirectoryInfo[] CurrentDirectories = OrigDir.GetDirectories();
+                    DirectoryInfo[] CurrentOrigDirs = OrigDir.GetDirectories();
 
-                    foreach (DirectoryInfo subdir in CurrentDirectories)
+                    foreach (DirectoryInfo subdir in CurrentOrigDirs)
                     {
                         DestDir.CreateSubdirectory(subdir.Name);
                     }
@@ -328,16 +328,76 @@ namespace Modulo11
 
         private static void RenameFileOrDirectory()
         {
-            //Pedir fichero o directorio a renombrar
-            //Pedir nuevo nombre
-            //Actuar
+            //Como no existe método de renombrar, ejecutamos un MOVE sobre mismo directorio indicando nombre distinto. Esto emula un renombrar
+            DirectoryInfo OrigDir = null;
+            FileInfo OrigFile = null;
+
+            string origPath, destName;
+            bool origFileOK = false;
+            bool origDirOK = false;
+
+            Console.Write("Introduzca nombre de fichero o directorio: ");
+            origPath = Console.ReadLine();
+
+            origFileOK = File.Exists(origPath);
+            origDirOK = Directory.Exists(origPath);
+
+            Console.Write("Introduzca nuevo nombre: ");
+            destName = Console.ReadLine();
+
+            //Validamos que origen y destino sean coherentes antes de continuar
+            if (origDirOK)
+            {
+                OrigDir = new DirectoryInfo(origPath);
+                OrigDir.MoveTo(OrigDir.Parent.FullName + "\\" + destName);
+            }
+            else if (origFileOK)
+            {
+                OrigFile = new FileInfo(origPath);
+                OrigFile.MoveTo(OrigFile.DirectoryName + "\\" + destName + OrigFile.Extension);
+            }
+            else
+            {
+                Console.WriteLine("Origen y/o destino erroneos");
+                return;
+            }
         }
 
         private static void DeleteFileOrDirectory()
         {
-            //Pedir fichero o directorio a borrar
-            //Pedir confirmación
-            //Borrar este y sus contenidos anidados en caso de directorios
+            DirectoryInfo OrigDir = null;
+            FileInfo OrigFile = null;
+
+            string origPath;
+            bool origFileOK = false;
+            bool origDirOK = false;
+            bool DeleteAck = false;
+
+            Console.Write("Introduzca nombre de fichero o directorio a eliminar: ");
+            origPath = Console.ReadLine();
+
+            origFileOK = File.Exists(origPath);
+            origDirOK = Directory.Exists(origPath);
+
+            Console.Write("Está seguro? Marque X para continuar: ");
+            DeleteAck = Console.ReadLine().ToLower() == "x";
+
+            //Validamos que origen y destino sean coherentes antes de continuar
+            if (origDirOK & DeleteAck)
+            {
+                OrigDir = new DirectoryInfo(origPath);
+                OrigDir.Delete(true);
+            }
+            else if (origFileOK & DeleteAck)
+            {
+                OrigFile = new FileInfo(origPath);
+                OrigFile.Delete();
+            }
+            else
+            {
+                Console.WriteLine("Origen y/o destino erroneos");
+                return;
+            }
         }
         #endregion
     }
