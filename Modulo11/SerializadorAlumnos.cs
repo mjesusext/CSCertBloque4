@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Xml.Serialization;
 
 namespace Modulo11
 {
@@ -114,16 +115,33 @@ namespace Modulo11
         public static void SerializeStudents()
         {
             #region Binary Serialization
-            BinaryFormatter formatter = new BinaryFormatter();
+            BinaryFormatter BinFormatter = new BinaryFormatter();
             using (FileStream fs = new FileStream(@"C:\Users\mextreme\Desktop\SerializadoAlumnosM11.dat", FileMode.Create))
             {
                 try
                 {
-                    formatter.Serialize(fs, Alumnos);
+                    BinFormatter.Serialize(fs, Alumnos);
                 }
                 catch (SerializationException e)
                 {
-                    Console.WriteLine("Error en serialización de la colección de alumnos. Mensaje: {0}", e.Message);
+                    Console.WriteLine("Error en serialización binaria de la colección de alumnos. Mensaje: {0}", e.Message);
+                }
+            }
+            #endregion
+
+            #region Xml Serialization
+            //Requiere visibilidad de clase a serializar
+            //El serializador ya codifica correctamente el objeto a string (no tenemos que hacer encodings)
+            XmlSerializer Xmlformatter = new XmlSerializer(typeof(List<AlumnoM11>));
+            using (FileStream fs = new FileStream(@"C:\Users\mextreme\Desktop\SerializadoAlumnosM11.xml", FileMode.Create))
+            {
+                try
+                {
+                    Xmlformatter.Serialize(fs, Alumnos);
+                }
+                catch (SerializationException e)
+                {
+                    Console.WriteLine("Error en serialización XML de la colección de alumnos. Mensaje: {0}", e.Message);
                 }
             }
             #endregion
@@ -132,16 +150,34 @@ namespace Modulo11
         public static void DeserializeStudents()
         {
             #region Binary Deserialization
-            BinaryFormatter formatter = new BinaryFormatter();
+            BinaryFormatter BinFormatter = new BinaryFormatter();
             using (FileStream fs = new FileStream(@"C:\Users\mextreme\Desktop\SerializadoAlumnosM11.dat", FileMode.Open))
             {
                 try
                 {
-                    Alumnos = (List<AlumnoM11>)formatter.Deserialize(fs);
+                    Alumnos = (List<AlumnoM11>)BinFormatter.Deserialize(fs);
                 }
                 catch (SerializationException e)
                 {
-                    Console.WriteLine("Error en deserialización del fichero de alumnos. Mensaje: {0}", e.Message);
+                    Console.WriteLine("Error en deserialización binaria del fichero de alumnos. Mensaje: {0}", e.Message);
+                }
+            }
+            #endregion
+
+            #region Xml Deserialization
+            //Requiere visibilidad de clase a serializar
+            //El serializador ya codifica correctamente el objeto a string (no tenemos que hacer encodings)
+            XmlSerializer XmlFormatter = new XmlSerializer(typeof(List<AlumnoM11>));
+
+            using (FileStream fs = new FileStream(@"C:\Users\mextreme\Desktop\SerializadoAlumnosM11.xml", FileMode.Open))
+            {
+                try
+                {
+                    Alumnos = (List<AlumnoM11>)XmlFormatter.Deserialize(fs);
+                }
+                catch (SerializationException e)
+                {
+                    Console.WriteLine("Error en deserialización XML del fichero de alumnos. Mensaje: {0}", e.Message);
                 }
             }
             #endregion
@@ -149,7 +185,7 @@ namespace Modulo11
     }
 
     [Serializable]
-    class AlumnoM11
+    public class AlumnoM11
     {
         public string Nombre { get; set; }
         public string Apellidos { get; set; }
