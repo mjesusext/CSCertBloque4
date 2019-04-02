@@ -270,7 +270,7 @@ namespace Modulo11
 
         private static void CopyFileOrDirectory()
         {
-            DirectoryInfo OrigDir = null;
+            DirectoryInfo OrigDir = null, DestDir = null;
             FileInfo OrigFile = null;
 
             string origPath, destPath;
@@ -292,9 +292,27 @@ namespace Modulo11
             //Validamos que origen y destino sean coherentes antes de continuar
             if (origDirOK && destOK)
             {
-                //Creamos directorio maestro e iteramos para crear arbol de carpetas y ficheros.
+                //Creamos directorio raiz destino y copiamos ficheros que esten en la raíz
                 OrigDir = new DirectoryInfo(origPath);
-                OrigDir.MoveTo(destPath + "\\" + OrigDir.Name);
+                DestDir = Directory.CreateDirectory(destPath + "\\" + OrigFile.Name);
+
+                foreach (FileInfo rootFile in OrigDir.GetFiles())
+                {
+                    rootFile.CopyTo(DestDir.FullName + "\\" + rootFile.Name);
+                }
+
+                //Iteramos para crear arbol de carpetas y ficheros internos 
+                bool DrillDown = true;
+
+                while (DrillDown)
+                {
+                    DirectoryInfo[] CurrentDirectories = OrigDir.GetDirectories();
+
+                    foreach (DirectoryInfo subdir in CurrentDirectories)
+                    {
+                        DestDir.CreateSubdirectory(subdir.Name);
+                    }
+                }
             }
             else if (origFileOK && destOK)
             {
