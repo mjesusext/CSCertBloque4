@@ -292,27 +292,12 @@ namespace Modulo11
             //Validamos que origen y destino sean coherentes antes de continuar
             if (origDirOK && destOK)
             {
-                //Creamos directorio raiz destino y copiamos ficheros que esten en la raíz
+                //Creamos directorio raiz destino y lanzamos un método que implementaremos como recursivo
                 OrigDir = new DirectoryInfo(origPath);
-                DestDir = Directory.CreateDirectory(destPath + "\\" + OrigFile.Name);
+                DestDir = Directory.CreateDirectory(destPath + "\\" + OrigDir.Name);
 
-                foreach (FileInfo rootFile in OrigDir.GetFiles())
-                {
-                    rootFile.CopyTo(DestDir.FullName + "\\" + rootFile.Name);
-                }
-
-                //Iteramos para crear arbol de carpetas y ficheros internos 
-                bool DrillDown = true;
-
-                while (DrillDown)
-                {
-                    DirectoryInfo[] CurrentOrigDirs = OrigDir.GetDirectories();
-
-                    foreach (DirectoryInfo subdir in CurrentOrigDirs)
-                    {
-                        DestDir.CreateSubdirectory(subdir.Name);
-                    }
-                }
+                //Llamamos a función recursiva (hasta que no hayan mas subdirectorios)
+                CopyFoldersAndFiles(DestDir, OrigDir);
             }
             else if (origFileOK && destOK)
             {
@@ -325,6 +310,23 @@ namespace Modulo11
                 return;
             }
         }
+
+        private static void CopyFoldersAndFiles(DirectoryInfo CurrCopyDir, DirectoryInfo OriginalDir)
+        {
+            //Copiamos ficheros de este nivel
+            foreach (FileInfo rootFile in OriginalDir.GetFiles())
+            {
+                rootFile.CopyTo(CurrCopyDir.FullName + "\\" + rootFile.Name);
+            }
+
+            //Si existen subdirectorios desde el nivel actual de original.
+                //Creamos subcarpeta en la copia con el mismo nombre que el original
+                //Llamamos recursivamente a la función con el objeto de subdirectorio copiado y el nivel de subdirectorio del original
+            foreach (DirectoryInfo OriginalSubDir in OriginalDir.GetDirectories())
+            {
+                CopyFoldersAndFiles(CurrCopyDir.CreateSubdirectory(OriginalSubDir.Name), OriginalSubDir);
+            }
+        }    
 
         private static void RenameFileOrDirectory()
         {
