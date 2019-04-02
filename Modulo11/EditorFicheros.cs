@@ -270,10 +270,42 @@ namespace Modulo11
 
         private static void CopyFileOrDirectory()
         {
-            //Pedir fichero o directorio a copiar
-            //Ruta de destino
-            //Validar si origen y dest OK
-            //Si es directorio, actuar sobre este y todo su contenido
+            DirectoryInfo OrigDir = null;
+            FileInfo OrigFile = null;
+
+            string origPath, destPath;
+            bool origFileOK = false;
+            bool origDirOK = false;
+            bool destOK = false;
+
+            Console.Write("Introduzca nombre de fichero o directorio: ");
+            origPath = Console.ReadLine();
+
+            origFileOK = File.Exists(origPath);
+            origDirOK = Directory.Exists(origPath);
+
+            Console.Write("Introduzca directorio de destino: ");
+            destPath = Console.ReadLine();
+
+            destOK = Directory.Exists(destPath);
+
+            //Validamos que origen y destino sean coherentes antes de continuar
+            if (origDirOK && destOK)
+            {
+                //Creamos directorio maestro e iteramos para crear arbol de carpetas y ficheros.
+                OrigDir = new DirectoryInfo(origPath);
+                OrigDir.MoveTo(destPath + "\\" + OrigDir.Name);
+            }
+            else if (origFileOK && destOK)
+            {
+                OrigFile = new FileInfo(origPath);
+                OrigFile.CopyTo(destPath + "\\" + OrigFile.Name);
+            }
+            else
+            {
+                Console.WriteLine("Origen y/o destino erroneos");
+                return;
+            }
         }
 
         private static void RenameFileOrDirectory()
