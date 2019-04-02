@@ -10,7 +10,8 @@ namespace Modulo11
     {
         static void Main(string[] args)
         {
-            EditorFicheros.Run();
+            //EditorFicheros.Run();
+            SerializadorAlumnos.Run();
         }
     }
 }
