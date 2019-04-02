@@ -81,7 +81,7 @@ namespace Modulo11
                               "7) Finalizar\n");
         }
 
-        #region Write / Read text files
+        #region Write/Read text files
         private static void WriteFileFromPromptV1()
         {
             string fileName;
