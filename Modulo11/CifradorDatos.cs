@@ -68,19 +68,9 @@ namespace Modulo11
                               "3) Finalizar\n");
         }
 
-        private static void EncryptFile()
+        private static CifradorDatosAlgoritmo GetAlgorithm()
         {
-            string origPath;
-            string destPath;
-            FileStream origFS, destFS;
             CifradorDatosAlgoritmo SelAlg;
-
-            Console.Write("Introduzca ruta de fichero a cifrar: ");
-            origPath = Console.ReadLine();
-            destPath = Path.GetDirectoryName(origPath) + 
-                       "Encrypted" + 
-                       Path.GetFileNameWithoutExtension(origPath) +
-                       ".dat";
 
             Console.WriteLine("Introduzca modo de cifrado: ");
             Console.WriteLine("1) RSA\n" +
@@ -92,8 +82,36 @@ namespace Modulo11
                 Console.Write("Modo seleccionado: ");
             } while (!Enum.TryParse(Console.ReadLine(), out SelAlg));
 
+            return SelAlg;
+        }
+
+        private static void EncryptFile()
+        {
+            string origPath;
+            string destPath;
+            FileStream origFS, destFS;
+            CifradorDatosAlgoritmo SelAlg;
+
+            Console.Write("Introduzca ruta de fichero a cifrar: ");
+            origPath = Console.ReadLine();
+            destPath = Path.GetDirectoryName(origPath) + 
+                       Path.GetFileNameWithoutExtension(origPath) +
+                       ".dat";
+
+            SelAlg = GetAlgorithm();
+
             //Secuencia de usings segun el cifrador
-            //using()
+            using (destFS = new FileStream(destPath, FileMode.Create))
+            {
+                //Donde pone null hay que poner el objeto de cifrado
+                using (CryptoStream cs = new CryptoStream(destFS, null, CryptoStreamMode.Write))
+                {
+                    using (origFS = new FileStream(origPath, FileMode.Open))
+                    {
+                        //Escribir
+                    }
+                }
+            }
 
             Console.WriteLine("Fichero encriptado");
         }
