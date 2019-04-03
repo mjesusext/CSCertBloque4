@@ -45,6 +45,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CargadorCodigo.cs" />
+    <Compile Include="CifradorDatos.cs" />
+    <Compile Include="MonitorRendimiento.cs" />
     <Compile Include="SerializadorAlumnos.cs" />
     <Compile Include="EditorFicheros.cs" />
     <Compile Include="Program.cs" />
