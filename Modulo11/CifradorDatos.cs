@@ -20,7 +20,7 @@ namespace Modulo11
 
         private enum CifradorDatosAlgoritmo
         {
-            RSA = 0,
+            //RSA = 0,
             DES = 1,
             DES3 = 2,
             Rijndael = 3,
@@ -30,7 +30,7 @@ namespace Modulo11
         {
             bool nextOp = true;
             CifradorDatosModo opChoice = CifradorDatosModo.None;
-            Console.WriteLine("----- Editor de textos -----");
+            Console.WriteLine("----- Cifrador de ficheros -----");
 
             do
             {
@@ -68,9 +68,10 @@ namespace Modulo11
                               "3) Finalizar\n");
         }
 
-        private static CifradorDatosAlgoritmo GetAlgorithm()
+        private static void GetAlgorithm(object AlgBuilder, ICryptoTransform AlgTransformer, bool encrypt)
         {
             CifradorDatosAlgoritmo SelAlg;
+            Rfc2898DeriveBytes GeneratedKey = new Rfc2898DeriveBytes("1234", Encoding.Unicode.GetBytes("Mi vector de inicialización (la sal)"));
 
             Console.WriteLine("Introduzca modo de cifrado: ");
             Console.WriteLine("1) RSA\n" +
@@ -82,15 +83,60 @@ namespace Modulo11
                 Console.Write("Modo seleccionado: ");
             } while (!Enum.TryParse(Console.ReadLine(), out SelAlg));
 
-            return SelAlg;
+            switch (SelAlg)
+            {
+                //case CifradorDatosAlgoritmo.RSA:
+                //    RSACryptoServiceProvider rsa_prov = new RSACryptoServiceProvider();
+                //    RSAParameters rsa_params = rsa_prov.ExportParameters(true);
+                //    Console.WriteLine("Valor P RSA en Base64: {0}\n" +
+                //                      "Valor Q RSA en Base64: {1}\n",
+                //                      Convert.ToBase64String(rsa_params.P),
+                //                      Convert.ToBase64String(rsa_params.Q));
+                //    algorithm = rsa_prov;
+
+                //    break;
+                case CifradorDatosAlgoritmo.DES:
+                    DESCryptoServiceProvider des_prov = new DESCryptoServiceProvider();
+                    //Dividimos por 8 puesto que los tamaños vienen en bits
+                    des_prov.IV = GeneratedKey.GetBytes(des_prov.KeySize / 8);
+                    des_prov.Key = GeneratedKey.GetBytes(des_prov.BlockSize / 8);
+
+                    AlgBuilder = des_prov;
+                    AlgTransformer = encrypt ? des_prov.CreateEncryptor() : des_prov.CreateDecryptor();
+                    break;
+                case CifradorDatosAlgoritmo.DES3:
+                    TripleDESCryptoServiceProvider tripledes_prov = new TripleDESCryptoServiceProvider();
+                    tripledes_prov.IV = GeneratedKey.GetBytes(tripledes_prov.KeySize / 8);
+                    tripledes_prov.Key = GeneratedKey.GetBytes(tripledes_prov.BlockSize / 8);
+
+                    AlgBuilder = tripledes_prov;
+                    AlgTransformer = encrypt ? tripledes_prov.CreateEncryptor() : tripledes_prov.CreateDecryptor();
+                    break;
+                case CifradorDatosAlgoritmo.Rijndael:
+                    RijndaelManaged aes_prov = new RijndaelManaged();
+                    aes_prov.IV = GeneratedKey.GetBytes(aes_prov.KeySize / 8);
+                    aes_prov.Key = GeneratedKey.GetBytes(aes_prov.BlockSize / 8);
+
+                    AlgBuilder = aes_prov;
+                    AlgTransformer = encrypt ? aes_prov.CreateEncryptor() : aes_prov.CreateDecryptor();
+                    break;
+                default:
+                    AlgBuilder = null;
+                    AlgTransformer = null;
+                    break;
+            }
         }
 
         private static void EncryptFile()
         {
             string origPath;
             string destPath;
-            FileStream origFS, destFS;
-            CifradorDatosAlgoritmo SelAlg;
+            FileStream origFS = null;
+            FileStream destFS = null;
+
+            object AlgBuilder = null;
+            CryptoStream cs = null;
+            ICryptoTransform AlgTransformer = null;
 
             Console.Write("Introduzca ruta de fichero a cifrar: ");
             origPath = Console.ReadLine();
@@ -98,21 +144,42 @@ namespace Modulo11
                        Path.GetFileNameWithoutExtension(origPath) +
                        ".dat";
 
-            SelAlg = GetAlgorithm();
-
-            //Secuencia de usings segun el cifrador
-            using (destFS = new FileStream(destPath, FileMode.Create))
+            try
             {
-                //Donde pone null hay que poner el objeto de cifrado
-                using (CryptoStream cs = new CryptoStream(destFS, null, CryptoStreamMode.Write))
+                GetAlgorithm(AlgBuilder, AlgTransformer, true);
+
+                destFS = new FileStream(destPath, FileMode.Create);
+                cs = new CryptoStream(destFS, AlgTransformer, CryptoStreamMode.Write);
+                origFS = new FileStream(origPath, FileMode.Open);
+
+                //TO DO: Implementar escritura y forma de escribir en el formato asimetrico
+                //cs.Write();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Proceso de cifrado con errores. Detalles: {0}", e.Message);
+                return;
+            }
+            finally
+            {
+                if (AlgBuilder != null)
                 {
-                    using (origFS = new FileStream(origPath, FileMode.Open))
-                    {
-                        //Escribir
-                    }
+                    ((IDisposable)AlgBuilder).Dispose();
+                }
+                if (destFS != null)
+                {
+                    destFS.Close();
+                }
+                if (origFS != null)
+                {
+                    origFS.Close();
+                }
+                if (cs != null)
+                {
+                    cs.Close();
                 }
             }
-
+            
             Console.WriteLine("Fichero encriptado");
         }
 
