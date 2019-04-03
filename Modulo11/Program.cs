@@ -12,7 +12,8 @@ namespace Modulo11
         {
             //EditorFicheros.Run();
             //SerializadorAlumnos.Run();
-            CargadorCodigo.Run();
+            //CargadorCodigo.Run();
+            CifradorDatos.Run();
         }
     }
 }

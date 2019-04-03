@@ -6,11 +6,7 @@ using System.Threading.Tasks;
 
 namespace Modulo11
 {
-    public static class CifradorDatos
+    public static class SistemaClienteServidor
     {
-        public static void Run()
-        {
-            
-        }
     }
 }
