@@ -63,12 +63,12 @@ namespace Modulo11
         private static void PromptMenu()
         {
             Console.WriteLine("Seleccione una opción:");
-            Console.WriteLine("1) Cifrar fichero y guardar en txt file\n" +
-                              "2) Descifrar txt file y guardar en fichero original\n" +
+            Console.WriteLine("1) Cifrar fichero y guardar en dat file\n" +
+                              "2) Descifrar dat file y guardar en fichero original\n" +
                               "3) Finalizar\n");
         }
 
-        private static void GetAlgorithm(object AlgBuilder, ICryptoTransform AlgTransformer, bool encrypt)
+        private static void GetAlgorithm(ref object AlgBuilder, ref ICryptoTransform AlgTransformer, bool encrypt)
         {
             CifradorDatosAlgoritmo SelAlg;
             Rfc2898DeriveBytes GeneratedKey = new Rfc2898DeriveBytes("1234", Encoding.Unicode.GetBytes("Mi vector de inicialización (la sal)"));
@@ -131,8 +131,8 @@ namespace Modulo11
         {
             string origPath;
             string destPath;
-            FileStream origFS = null;
             FileStream destFS = null;
+            StreamWriter st_wr = null;
 
             object AlgBuilder = null;
             CryptoStream cs = null;
@@ -140,20 +140,20 @@ namespace Modulo11
 
             Console.Write("Introduzca ruta de fichero a cifrar: ");
             origPath = Console.ReadLine();
-            destPath = Path.GetDirectoryName(origPath) + 
-                       Path.GetFileNameWithoutExtension(origPath) +
+            destPath = Path.GetDirectoryName(origPath) + "\\" +
+                       Path.GetFileName(origPath) +
                        ".dat";
 
             try
             {
-                GetAlgorithm(AlgBuilder, AlgTransformer, true);
+                GetAlgorithm(ref AlgBuilder, ref AlgTransformer, true);
 
                 destFS = new FileStream(destPath, FileMode.Create);
                 cs = new CryptoStream(destFS, AlgTransformer, CryptoStreamMode.Write);
-                origFS = new FileStream(origPath, FileMode.Open);
 
-                //TO DO: Implementar escritura y forma de escribir en el formato asimetrico
-                //cs.Write();
+                //Stream que escriba en Crypto de golpe sin indicar limites de bytes
+                st_wr = new StreamWriter(cs);
+                //st_wr.Write()
             }
             catch (Exception e)
             {
@@ -162,22 +162,9 @@ namespace Modulo11
             }
             finally
             {
-                if (AlgBuilder != null)
-                {
-                    ((IDisposable)AlgBuilder).Dispose();
-                }
-                if (destFS != null)
-                {
-                    destFS.Close();
-                }
-                if (origFS != null)
-                {
-                    origFS.Close();
-                }
-                if (cs != null)
-                {
-                    cs.Close();
-                }
+                cs?.Close();
+                ((IDisposable)AlgBuilder)?.Dispose();
+                destFS?.Close();
             }
             
             Console.WriteLine("Fichero encriptado");
@@ -185,7 +172,45 @@ namespace Modulo11
 
         private static void DecryptFile()
         {
+            string origPath;
+            string destPath;
+            FileStream origFS = null;
+            BinaryReader bin_reader = null;
 
+            object AlgBuilder = null;
+            CryptoStream cs = null;
+            ICryptoTransform AlgTransformer = null;
+
+            Console.Write("Introduzca ruta de fichero a descifrar: ");
+            origPath = Console.ReadLine();
+            destPath = Path.GetDirectoryName(origPath) + "\\" +
+                       Path.GetFileNameWithoutExtension(origPath);
+
+            try
+            {
+                GetAlgorithm(ref AlgBuilder, ref AlgTransformer, false);
+
+                origFS = new FileStream(origPath, FileMode.Open);
+                cs = new CryptoStream(origFS, AlgTransformer, CryptoStreamMode.Read);
+
+                //Stream que lea Crypto de golpe sin indicar limites de bytes
+                bin_reader = new BinaryReader(cs);
+                //bin_reader.Read()
+                //File.WriteAllBytes(destPath, DataToTransform);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Proceso de cifrado con errores. Detalles: {0}", e.Message);
+                return;
+            }
+            finally
+            {
+                cs?.Close();
+                ((IDisposable)AlgBuilder)?.Dispose();
+                origFS?.Close();
+            }
+
+            Console.WriteLine("Fichero desencriptado");
         }
     }
 }
