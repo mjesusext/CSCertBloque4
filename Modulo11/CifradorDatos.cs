@@ -20,10 +20,10 @@ namespace Modulo11
 
         private enum CifradorDatosAlgoritmo
         {
-            //RSA = 0,
-            DES = 1,
-            DES3 = 2,
-            Rijndael = 3,
+            //RSA = 1,
+            DES = 2,
+            DES3 = 3,
+            Rijndael = 4,
         };
 
         public static void Run()
