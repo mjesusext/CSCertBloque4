@@ -132,7 +132,8 @@ namespace Modulo11
             string origPath;
             string destPath;
             FileStream destFS = null;
-            StreamWriter st_wr = null;
+            StreamReader origSR = null;
+            StreamWriter StToCs = null;
 
             object AlgBuilder = null;
             CryptoStream cs = null;
@@ -152,8 +153,9 @@ namespace Modulo11
                 cs = new CryptoStream(destFS, AlgTransformer, CryptoStreamMode.Write);
 
                 //Stream que escriba en Crypto de golpe sin indicar limites de bytes
-                st_wr = new StreamWriter(cs);
-                //st_wr.Write()
+                StToCs = new StreamWriter(cs);
+                origSR = File.OpenText(origPath);
+                StToCs.Write(origSR.ReadToEnd());
             }
             catch (Exception e)
             {
@@ -162,9 +164,11 @@ namespace Modulo11
             }
             finally
             {
-                cs?.Close();
+                StToCs?.Dispose();
+                origSR?.Dispose();
+                cs?.Dispose();
                 ((IDisposable)AlgBuilder)?.Dispose();
-                destFS?.Close();
+                destFS?.Dispose();
             }
             
             Console.WriteLine("Fichero encriptado");
@@ -175,7 +179,8 @@ namespace Modulo11
             string origPath;
             string destPath;
             FileStream origFS = null;
-            BinaryReader bin_reader = null;
+            StreamReader StFromCs = null;
+            StreamWriter destSW = null;
 
             object AlgBuilder = null;
             CryptoStream cs = null;
@@ -194,9 +199,9 @@ namespace Modulo11
                 cs = new CryptoStream(origFS, AlgTransformer, CryptoStreamMode.Read);
 
                 //Stream que lea Crypto de golpe sin indicar limites de bytes
-                bin_reader = new BinaryReader(cs);
-                //bin_reader.Read()
-                //File.WriteAllBytes(destPath, DataToTransform);
+                StFromCs = new StreamReader(cs);
+                destSW = new StreamWriter(File.Open(destPath, FileMode.Create));
+                destSW.Write(StFromCs.ReadToEnd());
             }
             catch (Exception e)
             {
@@ -205,9 +210,11 @@ namespace Modulo11
             }
             finally
             {
-                cs?.Close();
+                StFromCs?.Close();
+                destSW?.Close();
+                cs?.Dispose();
                 ((IDisposable)AlgBuilder)?.Dispose();
-                origFS?.Close();
+                origFS?.Dispose();
             }
 
             Console.WriteLine("Fichero desencriptado");
