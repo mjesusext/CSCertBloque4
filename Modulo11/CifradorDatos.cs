@@ -131,10 +131,10 @@ namespace Modulo11
         {
             string origPath;
             string destPath;
+            FileStream origFS = null;
             FileStream destFS = null;
-            StreamReader origSR = null;
-            StreamWriter StToCs = null;
 
+            byte[] DataBuffer;
             object AlgBuilder = null;
             CryptoStream cs = null;
             ICryptoTransform AlgTransformer = null;
@@ -145,17 +145,34 @@ namespace Modulo11
                        Path.GetFileName(origPath) +
                        ".dat";
 
+            //Recuperamos información para procesar
+            using (origFS = new FileStream(origPath, FileMode.Open))
+            {
+                int lengthToRead = (int)origFS.Length;
+                int posDataArray = 0;
+                int lengthRead = -1;
+
+                DataBuffer = new byte[lengthToRead];
+
+                while (lengthRead != 0)
+                {
+                    lengthRead = origFS.Read(DataBuffer, posDataArray, lengthToRead - posDataArray);
+                    posDataArray += lengthRead;
+                }
+            }
+
+            //Creamos algoritmo y stream para escribir mediante objeto que transforma el dato
             try
             {
                 GetAlgorithm(ref AlgBuilder, ref AlgTransformer, true);
 
-                destFS = new FileStream(destPath, FileMode.Create);
-                cs = new CryptoStream(destFS, AlgTransformer, CryptoStreamMode.Write);
-
-                //Stream que escriba en Crypto de golpe sin indicar limites de bytes
-                StToCs = new StreamWriter(cs);
-                origSR = File.OpenText(origPath);
-                StToCs.Write(origSR.ReadToEnd());
+                using (destFS = new FileStream(destPath, FileMode.Create))
+                {
+                    using (cs = new CryptoStream(destFS, AlgTransformer, CryptoStreamMode.Write))
+                    {
+                        cs.Write(DataBuffer, 0, DataBuffer.Length);
+                    }
+                }
             }
             catch (Exception e)
             {
@@ -164,11 +181,7 @@ namespace Modulo11
             }
             finally
             {
-                StToCs?.Dispose();
-                origSR?.Dispose();
-                cs?.Dispose();
                 ((IDisposable)AlgBuilder)?.Dispose();
-                destFS?.Dispose();
             }
             
             Console.WriteLine("Fichero encriptado");
@@ -179,9 +192,9 @@ namespace Modulo11
             string origPath;
             string destPath;
             FileStream origFS = null;
-            StreamReader StFromCs = null;
-            StreamWriter destSW = null;
+            FileStream destFS = null;
 
+            byte[] DataBuffer;
             object AlgBuilder = null;
             CryptoStream cs = null;
             ICryptoTransform AlgTransformer = null;
@@ -191,32 +204,45 @@ namespace Modulo11
             destPath = Path.GetDirectoryName(origPath) + "\\" +
                        Path.GetFileNameWithoutExtension(origPath);
 
+            //Creamos algoritmo y stream para escribir mediante objeto que transforma el dato
             try
             {
                 GetAlgorithm(ref AlgBuilder, ref AlgTransformer, false);
 
-                origFS = new FileStream(origPath, FileMode.Open);
-                cs = new CryptoStream(origFS, AlgTransformer, CryptoStreamMode.Read);
+                //Recuperamos información para procesar
+                using (origFS = new FileStream(origPath, FileMode.Open))
+                {
+                    using (cs = new CryptoStream(origFS, AlgTransformer, CryptoStreamMode.Read))
+                    {
+                        int lengthToRead = (int)origFS.Length;
+                        int posDataArray = 0;
+                        int lengthRead = -1;
 
-                //Stream que lea Crypto de golpe sin indicar limites de bytes
-                StFromCs = new StreamReader(cs);
-                destSW = new StreamWriter(File.Open(destPath, FileMode.Create));
-                destSW.Write(StFromCs.ReadToEnd());
+                        DataBuffer = new byte[lengthToRead];
+
+                        while (lengthRead != 0)
+                        {
+                            lengthRead = cs.Read(DataBuffer, posDataArray, lengthToRead - posDataArray);
+                            posDataArray += lengthRead;
+                        }
+                    }
+
+                    using (destFS = new FileStream(destPath, FileMode.Create))
+                    {
+                        destFS.Write(DataBuffer, 0, DataBuffer.Length);
+                    }
+                }
             }
             catch (Exception e)
             {
-                Console.WriteLine("Proceso de cifrado con errores. Detalles: {0}", e.Message);
+                Console.WriteLine("Proceso de descifrado con errores. Detalles: {0}", e.Message);
                 return;
             }
             finally
             {
-                StFromCs?.Close();
-                destSW?.Close();
-                cs?.Dispose();
                 ((IDisposable)AlgBuilder)?.Dispose();
-                origFS?.Dispose();
             }
-
+            
             Console.WriteLine("Fichero desencriptado");
         }
     }
