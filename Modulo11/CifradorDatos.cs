@@ -20,9 +20,9 @@ namespace Modulo11
 
         private enum CifradorDatosAlgoritmo
         {
-            //RSA = 1,
+            RSA = 1,
             DES = 2,
-            DES3 = 3,
+            T_DES = 3,
             Rijndael = 4,
         };
 
@@ -77,7 +77,7 @@ namespace Modulo11
             Console.WriteLine("1) RSA\n" +
                               "2) DES\n" +
                               "3) 3-DES\n" +
-                              "4) Rijndael (AES + otras variantes)\n");
+                              "4) Rijndael (AES)\n");
             do
             {
                 Console.Write("Modo seleccionado: ");
@@ -85,41 +85,48 @@ namespace Modulo11
 
             switch (SelAlg)
             {
-                //case CifradorDatosAlgoritmo.RSA:
-                //    RSACryptoServiceProvider rsa_prov = new RSACryptoServiceProvider();
-                //    RSAParameters rsa_params = rsa_prov.ExportParameters(true);
-                //    Console.WriteLine("Valor P RSA en Base64: {0}\n" +
-                //                      "Valor Q RSA en Base64: {1}\n",
-                //                      Convert.ToBase64String(rsa_params.P),
-                //                      Convert.ToBase64String(rsa_params.Q));
-                //    algorithm = rsa_prov;
+                //Si dividimos por 8 es porque los tamaños vienen en bits
+                //Primero seteamos clave a partir del tamaño de clave predeterminado. Una vez seteado, el provider setea el blocksize adecuado.
+                //Aprovechamos el blocksize calculado para pasarle una sal equivalente al blocksize
 
-                //    break;
+                case CifradorDatosAlgoritmo.RSA:
+                    RSACryptoServiceProvider rsa_prov = new RSACryptoServiceProvider();
+                    RSAParameters rsa_params = rsa_prov.ExportParameters(true);
+                    Console.WriteLine("Valor P RSA en Base64: {0}\n" +
+                                      "Valor Q RSA en Base64: {1}\n",
+                                      Convert.ToBase64String(rsa_params.P),
+                                      Convert.ToBase64String(rsa_params.Q));
+                    AlgBuilder = rsa_prov;
+
+                    break;
+
                 case CifradorDatosAlgoritmo.DES:
                     DESCryptoServiceProvider des_prov = new DESCryptoServiceProvider();
-                    //Dividimos por 8 puesto que los tamaños vienen en bits
-                    des_prov.IV = GeneratedKey.GetBytes(des_prov.KeySize / 8);
-                    des_prov.Key = GeneratedKey.GetBytes(des_prov.BlockSize / 8);
-
+                    des_prov.Key = GeneratedKey.GetBytes(des_prov.KeySize / 8);
+                    des_prov.IV = GeneratedKey.GetBytes(des_prov.BlockSize / 8);
+                    
                     AlgBuilder = des_prov;
                     AlgTransformer = encrypt ? des_prov.CreateEncryptor() : des_prov.CreateDecryptor();
                     break;
-                case CifradorDatosAlgoritmo.DES3:
+
+                case CifradorDatosAlgoritmo.T_DES:
                     TripleDESCryptoServiceProvider tripledes_prov = new TripleDESCryptoServiceProvider();
-                    tripledes_prov.IV = GeneratedKey.GetBytes(tripledes_prov.KeySize / 8);
-                    tripledes_prov.Key = GeneratedKey.GetBytes(tripledes_prov.BlockSize / 8);
+                    tripledes_prov.Key = GeneratedKey.GetBytes(tripledes_prov.KeySize / 8);
+                    tripledes_prov.IV = GeneratedKey.GetBytes(tripledes_prov.BlockSize / 8);
 
                     AlgBuilder = tripledes_prov;
                     AlgTransformer = encrypt ? tripledes_prov.CreateEncryptor() : tripledes_prov.CreateDecryptor();
                     break;
+
                 case CifradorDatosAlgoritmo.Rijndael:
                     RijndaelManaged aes_prov = new RijndaelManaged();
-                    aes_prov.IV = GeneratedKey.GetBytes(aes_prov.KeySize / 8);
-                    aes_prov.Key = GeneratedKey.GetBytes(aes_prov.BlockSize / 8);
-
+                    aes_prov.Key = GeneratedKey.GetBytes(aes_prov.KeySize / 8);
+                    aes_prov.IV = GeneratedKey.GetBytes(aes_prov.BlockSize / 8);
+                    
                     AlgBuilder = aes_prov;
                     AlgTransformer = encrypt ? aes_prov.CreateEncryptor() : aes_prov.CreateDecryptor();
                     break;
+
                 default:
                     AlgBuilder = null;
                     AlgTransformer = null;
@@ -166,11 +173,23 @@ namespace Modulo11
             {
                 GetAlgorithm(ref AlgBuilder, ref AlgTransformer, true);
 
-                using (destFS = new FileStream(destPath, FileMode.Create))
+                if(AlgTransformer != null)
                 {
-                    using (cs = new CryptoStream(destFS, AlgTransformer, CryptoStreamMode.Write))
+                    using (destFS = new FileStream(destPath, FileMode.Create))
                     {
-                        cs.Write(DataBuffer, 0, DataBuffer.Length);
+                        using (cs = new CryptoStream(destFS, AlgTransformer, CryptoStreamMode.Write))
+                        {
+                            cs.Write(DataBuffer, 0, DataBuffer.Length);
+                        }
+                    }
+                }
+                else if(AlgBuilder != null)
+                {
+                    //En este caso estamos seguros que es RSA
+                    using (destFS = new FileStream(destPath, FileMode.Create))
+                    {
+                        DataBuffer = ((RSACryptoServiceProvider)AlgBuilder).Encrypt(DataBuffer, false);
+                        destFS.Write(DataBuffer, 0, DataBuffer.Length);
                     }
                 }
             }
@@ -194,7 +213,7 @@ namespace Modulo11
             FileStream origFS = null;
             FileStream destFS = null;
 
-            byte[] DataBuffer;
+            byte[] DataBuffer = null;
             object AlgBuilder = null;
             CryptoStream cs = null;
             ICryptoTransform AlgTransformer = null;
@@ -209,10 +228,30 @@ namespace Modulo11
             {
                 GetAlgorithm(ref AlgBuilder, ref AlgTransformer, false);
 
-                //Recuperamos información para procesar
-                using (origFS = new FileStream(origPath, FileMode.Open))
+                if(AlgTransformer != null)
                 {
-                    using (cs = new CryptoStream(origFS, AlgTransformer, CryptoStreamMode.Read))
+                    //Recuperamos información para procesar a traves de CryptoStream
+                    using (origFS = new FileStream(origPath, FileMode.Open))
+                    {
+                        using (cs = new CryptoStream(origFS, AlgTransformer, CryptoStreamMode.Read))
+                        {
+                            int lengthToRead = (int)origFS.Length;
+                            int posDataArray = 0;
+                            int lengthRead = -1;
+
+                            DataBuffer = new byte[lengthToRead];
+
+                            while (lengthRead != 0)
+                            {
+                                lengthRead = cs.Read(DataBuffer, posDataArray, lengthToRead - posDataArray);
+                                posDataArray += lengthRead;
+                            }
+                        }
+                    }
+                }
+                else if(AlgBuilder != null)
+                {
+                    using (origFS = new FileStream(origPath, FileMode.Open))
                     {
                         int lengthToRead = (int)origFS.Length;
                         int posDataArray = 0;
@@ -227,10 +266,13 @@ namespace Modulo11
                         }
                     }
 
-                    using (destFS = new FileStream(destPath, FileMode.Create))
-                    {
-                        destFS.Write(DataBuffer, 0, DataBuffer.Length);
-                    }
+                    DataBuffer = ((RSACryptoServiceProvider)AlgBuilder).Decrypt(DataBuffer, false);
+                }
+                
+                //Escribimos resultado
+                using (destFS = new FileStream(destPath, FileMode.Create))
+                {
+                    destFS.Write(DataBuffer, 0, DataBuffer.Length);
                 }
             }
             catch (Exception e)
