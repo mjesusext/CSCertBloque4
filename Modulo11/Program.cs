@@ -13,7 +13,8 @@ namespace Modulo11
             //EditorFicheros.Run();
             //SerializadorAlumnos.Run();
             //CargadorCodigo.Run();
-            CifradorDatos.Run();
+            //CifradorDatos.Run();
+            SistemaClienteServidor.Run();
         }
     }
 }
