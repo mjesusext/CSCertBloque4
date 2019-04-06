@@ -143,12 +143,12 @@ namespace Modulo11
                     return;
                 }
 
-                Console.WriteLine("A la espera de conexión del cliente");
-                
                 while (keeprun)
                 {
+                    Console.WriteLine("A la espera de conexión del cliente");
                     Socket socketWorker = socketListener.Accept();
-                    Console.WriteLine("Conexión aceptada");
+                    Console.WriteLine("Conexión aceptada\n");
+                    keepsocket = true;
 
                     while (keepsocket)
                     {
@@ -156,12 +156,20 @@ namespace Modulo11
 
                         try
                         {
-                            socketWorker.Receive(DataInput);
-                            Console.WriteLine(Encoding.Unicode.GetString(DataInput));
+                            if(socketWorker.Poll(1000, SelectMode.SelectRead))
+                            {
+                                Console.WriteLine("Cliente desconectado. Liberando conexion...");
+                                keepsocket = false;
+                                break;
+                            }
+
+                            int pos = socketWorker.Receive(DataInput);
+                            Console.WriteLine(Encoding.Unicode.GetString(DataInput.Take(pos).ToArray()));
                         }
                         catch (SocketException e)
                         {
                             Console.WriteLine("Error recibiendo datos. Detalle: {0}", e.Message);
+                            keepsocket = false;
                             break;
                         }
                     }
